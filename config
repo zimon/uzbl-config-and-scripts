@@ -320,9 +320,9 @@ set toggle_cmd_ins = @toggle_modes command insert
 
 # --- Link following (similar to vimperator and konqueror) ---
 # Set custom keys you wish to use for navigation. Some common examples:
-set follow_hint_keys = 0123456789
+#set follow_hint_keys = 0123456789
 #set follow_hint_keys = qwerty
-#set follow_hint_keys = asdfghjkl;
+set follow_hint_keys = asdfghjkl;
 #set follow_hint_keys = thsnd-rcgmvwb/;789aefijkopquxyz234
 @cbind  fl*  = script @scripts_dir/follow.js '@follow_hint_keys %s'
 
@@ -382,6 +382,21 @@ set stack    = @mode_config stack
 
 set default_mode = command
 
+# === Tab configuration ======================================================
+
+# General settings
+set show_tablist            = 0
+set show_gtk_tabs           = 1
+set tablist_top             = 1
+set gtk_tab_pos             = top
+set switch_to_new_tabs      = 1
+set capture_new_windows     = 1
+
+,# Titles
+set tab_titles              = 1
+set new_tab_title           = Loading
+set max_title_len           = 50
+set show_ellipsis           = 1
 
 # === Post-load misc commands  ===============================================
 
