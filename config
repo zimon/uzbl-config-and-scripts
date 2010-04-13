@@ -3,7 +3,7 @@
 
 set prefix     = /usr/local
 
-# === Shortcuts / Aliases  ===================================================
+# === Shortcuts / Aliases  =================================================== #{{{
 
 # Config related events (use the request function):
 # request BIND <bind cmd> = <command>
@@ -33,9 +33,9 @@ set shell_cmd       = sh -c
 
 # Spawn path shortcuts. In spawn the first dir+path match is used in "dir1:dir2:dir3:executable"
 set scripts_dir     = $XDG_DATA_HOME/uzbl:@prefix/share/uzbl/examples/data:scripts
+# }}}
 
-
-# === Handlers ===============================================================
+# === Handlers ===============================================================# {{{
 
 # --- Hardcoded event handlers -----------------------------------------------
 
@@ -77,8 +77,9 @@ set authentication_handler = sync_spawn @scripts_dir/auth.py
 # Example CONFIG_CHANGED event handler
 #@on_event  CONFIG_CHANGED print Config changed: %1 = %2
 
+# }}}
 
-# === Behaviour and appearance ===============================================
+# === Behaviour and appearance ===============================================# {{{
 
 set show_status       = 1
 set status_top        = 0
@@ -117,16 +118,16 @@ set title_format_long = \@keycmd_prompt \@raw_modcmd \@raw_keycmd \@TITLE - Uzbl
 #@progress spinner  = -\\|/
 #@progress done     = -
 #@progress pending  =
+# }}}
 
-
-# === Core settings ==========================================================
+# === Core settings ==========================================================# {{{
 
 set useragent         = Uzbl (Webkit @{WEBKIT_MAJOR}.@{WEBKIT_MINOR}.@{WEBKIT_MICRO}) (@(+uname -sm)@ [@ARCH_UZBL]) (Commit @COMMIT)
 set fifo_dir          = /tmp
 set socket_dir        = /tmp
+# }}}
 
-
-# === Key modmapping and ignoring ============================================
+# === Key modmapping and ignoring ============================================# {{{
 
 #modmap <From>          <To>
 @modmap <Control>       <Ctrl>
@@ -141,9 +142,9 @@ set socket_dir        = /tmp
 #ignore_key <glob>
 @ignore_key <ISO_*>
 @ignore_key <Shift>
+# }}}
 
-
-# === Mode bind aliases ======================================================
+# === Mode bind aliases ======================================================# {{{
 
 # Global binding alias (this is done automatically inside the bind plugin).
 #set bind = @mode_bind global
@@ -156,9 +157,9 @@ set cbind = @mode_bind command
 
 # Non-insert mode bindings alias (ebind for edit-bind).
 set ebind = @mode_bind global,-insert
+# }}}
 
-
-# === Global & keycmd editing binds ==========================================
+# === Global & keycmd editing binds ==========================================# {{{
 
 # Resets keycmd and returns to default mode.
 @on_event  ESCAPE    @set_mode
@@ -185,15 +186,15 @@ set ebind = @mode_bind global,-insert
 #@ebind  <Ctrl>st = event INJECT_KEYCMD \@title
 #@ebind  <Ctrl>du = event APPEND_KEYCMD \@uri
 #@ebind  <Ctrl>dt = event APPEND_KEYCMD \@title
+# }}}
 
-
-# === Mouse bindings =========================================================
+# === Mouse bindings =========================================================# {{{
 
 # Middle click open in new window
 @bind  <Button2>  = sh 'if [ "\@SELECTED_URI" ]; then uzbl-browser -u "\@SELECTED_URI"; else echo "uri $(xclip -o | sed s/\\\@/%40/g)" > $4; fi'
+# }}}
 
-
-# === Keyboard bindings ======================================================
+# === Keyboard bindings ======================================================# {{{
 
 # With this command you can enter in any command at runtime when prefixed with
 # a colon.
@@ -240,7 +241,7 @@ set ebind = @mode_bind global,-insert
 # Tab opening
 @cbind  tn              = event NEW_TAB
 @cbind  tN              = event NEW_TAB_NEXT
-@cbind  t<uri:>_       = event NEW_TAB %s
+@cbind  to<uri:>_       = event NEW_TAB %s
 @cbind  tO<uri:>_       = event NEW_TAB_NEXT %s
 @cbind  tY              = sh 'echo "event NEW_TAB `xclip -selection primary -o | sed s/\\\@/%40/g`" > $4'
 # Closing / resting
@@ -343,9 +344,9 @@ set formfiller = spawn @scripts_dir/formfiller.sh
 # Example showing how to use uzbl's fifo to execute a command.
 #@bind  X1 = sh 'echo "set zoom_level = 1.0" > "$4"'
 #@bind  X2 = sh 'echo "js alert (\\"This is sent by the shell via a fifo\\")" > "$4"'
+# }}}
 
-
-# === Context menu items =====================================================
+# === Context menu items =====================================================# {{{
 
 # Default context menu
 menu_add Google = set uri = http://google.com
@@ -355,9 +356,9 @@ menu_add Quit uzbl = exit
 
 # Link context menu
 menu_link_add Print Link = print \@SELECTED_URI
+# }}}
 
-
-# === Mode configuration =====================================================
+# === Mode configuration =====================================================# {{{
 
 # Define some mode specific uzbl configurations.
 set command  = @mode_config command
@@ -383,8 +384,10 @@ set stack    = @mode_config stack
 @stack    mode_indicator      = Bnd
 
 set default_mode = command
+# }}}
 
-# === Tab configuration ======================================================
+
+# === Tab configuration ======================================================# {{{
 
 # General settings
 set show_tablist            = 0
@@ -399,8 +402,15 @@ set tab_titles              = 1
 set new_tab_title           = Loading
 set max_title_len           = 50
 set show_ellipsis           = 1
+# }}}
 
-# === Post-load misc commands  ===============================================
+
+# === Post-load misc commands  ===============================================# {{{
 
 # Set the "home" page.
-set uri = uzbl.org/doesitwork/@COMMIT
+set uri = http://zinformatik.de
+# }}}
+
+
+# for a better use with vim. All the markings: #{{{ and #}}} belong to it
+# vim: foldmethod=marker commentstring=#%s
