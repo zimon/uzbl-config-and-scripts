@@ -32,7 +32,7 @@ set set_status      = set status_message =
 set shell_cmd       = sh -c
 
 # Spawn path shortcuts. In spawn the first dir+path match is used in "dir1:dir2:dir3:executable"
-set scripts_dir     = $XDG_DATA_HOME/uzbl/scripts:@prefix/share/uzbl/examples/data:scripts
+set scripts_dir     = $XDG_CONFIG_HOME/uzbl:@prefix/share/uzbl/examples/data:scripts
 # }}}
 
 # === Handlers ===============================================================# {{{
@@ -52,7 +52,7 @@ set authentication_handler = sync_spawn @scripts_dir/auth.py
 # Open in current window
 #@on_event   NEW_WINDOW     uri %s
 # Open in new tab
-@on_event   NEW_WINDOW     event NEW_TAB %s
+@on_event   NEW_WINDOW     event NEW_TAB_NEXT %s
 
 # Download handler
 @on_event   DOWNLOAD_REQUEST    spawn @scripts_dir/download.sh %s \@proxy_url
@@ -64,11 +64,13 @@ set authentication_handler = sync_spawn @scripts_dir/auth.py
 
 # Load commit handlers
 @on_event   LOAD_COMMIT    @set_status <span foreground="green">recv</span>
-@on_event   LOAD_COMMIT    spawn $XDG_CONFIG_HOME/uzbl/scripts/checkcookie.py
+@on_event   LOAD_COMMIT    spawn @scripts_dir/checkcookie.py
 
 # Load finish handlers
 @on_event   LOAD_FINISH    @set_status <span foreground="gold">done</span>
 @on_event   LOAD_FINISH    spawn @scripts_dir/history.sh
+@on_event   LOAD_FINISH    spawn @scripts_dir/ytvp.sh $4 $6
+#@on_event   LOAD_FINISH    spawn @scripts_dir/favicon.py
 
 # Switch to insert mode if a (editable) html form is clicked
 @on_event   FORM_ACTIVE    @set_mode insert
@@ -111,18 +113,18 @@ set status_format     = <span font_family="monospace">@mode_section @keycmd_sect
 set title_format_long = \@keycmd_prompt \@raw_modcmd \@raw_keycmd \@TITLE - Uzbl browser <\@NAME> \@SELECTED_URI
 
 # Progress bar config
-@progress width    = 8
+@progress width    = 10
 # %d = done, %p = pending %c = percent done, %i = int done, %s = spinner,
 # %t = percent pending, %o = int pending, %r = sprite scroll
-@progress format   = [%d>%p]%c
-@progress done     = =
-@progress pending  =
+#@progress format   = [%d%p]%c
+#@progress done     = \#
+#@progress pending  =
 
 # Or ride those spinnas'
-#@progress format   = [%d%s%p]
-#@progress spinner  = -\\|/
-#@progress done     = -
-#@progress pending  =
+@progress format   = [%d%s%p]%c
+@progress spinner  = -\\|/
+@progress done     = -
+@progress pending  =
 # }}}
 
 # === Core settings ==========================================================# {{{
@@ -131,6 +133,7 @@ set title_format_long = \@keycmd_prompt \@raw_modcmd \@raw_keycmd \@TITLE - Uzbl
 set useragent         = Mozilla/5.0 (Windows; U; Windows NT 5.1; de; rv:1.9.0.11) Gecko/2009060215 Firefox/3.0.11
 set fifo_dir          = /tmp
 set socket_dir        = /tmp
+set icon              = $XDG_CACHE_HOME/uzbl/favicon/default.ico
 # }}}
 
 # === Key modmapping and ignoring ============================================# {{{
@@ -199,7 +202,7 @@ set ebind = @mode_bind global,-insert
 # Middle click open in new window
 #@bind  <Button2>  = sh 'if [ "\@SELECTED_URI" ]; then uzbl-browser -u "\@SELECTED_URI"; else echo "uri $(xclip -o | sed s/\\\@/%40/g)" > $4; fi'
 # Middle click open in new tab
-@bind  <Button2>  = sh 'if [ "\@SELECTED_URI" ]; then echo "event NEW_TAB \@SELECTED_URI" > $4; else echo "event NEW_TAB $(parcellite -p | sed s/\\\@/%40/g)" > $4; fi'
+@bind  <Button2>  = sh 'if [ "\@SELECTED_URI" ]; then echo "event NEW_TAB_NEXT \@SELECTED_URI" > $4; else echo "event NEW_TAB_NEXT $(parcellite -p | sed s/\\\@/%40/g)" > $4; fi'
 # }}}
 
 # === Keyboard bindings ======================================================# {{{
@@ -208,8 +211,9 @@ set ebind = @mode_bind global,-insert
 # a colon.
 @cbind    :_        = %s
 
-# Pagemovements, navigation and zooming#{{{
-# --- Page movement binds ---
+# Pagemovements, navigation, searching and zooming#{{{
+
+# --- Page movement binds ---#{{{
 @cbind  j            = scroll vertical 20
 @cbind  k            = scroll vertical -20
 @cbind  h            = scroll horizontal -20
@@ -221,21 +225,29 @@ set ebind = @mode_bind global,-insert
 @cbind  ^            = scroll horizontal begin
 @cbind  $            = scroll horizontal end
 @cbind  <Space>      = scroll vertical 100%
+#}}}
 
-# --- Navigation binds ---
+# --- Navigation binds ---#{{{
+
+# Uri opening prompts
+@cbind  o<uri:>_       = uri %s
+# Or have it load the current uri into the keycmd for editing
+@cbind  O<uri:\@uri>_  = uri %s
+
 @cbind  b   = back
 @cbind  m   = forward
 @cbind  S   = stop
 @cbind  r   = reload
 @cbind  R   = reload_ign_cache
-@cbind  >>  = $XDG_CONFIG_HOME/uzbl/scripts/go_next_page.js
-@cbind  <<  = $XDG_CONFIG_HOME/uzbl/scripts/go_prev_page.js
+@cbind  >>  = @scripts_dir/go_next_page.js
+@cbind  <<  = @scripts_dir/go_prev_page.js
 # Go up one level
-@bind gu = script $XDG_CONFIG_HOME/uzbl/scripts/go_up.js
+@bind gu = script @scripts_dir/go_up.js
 # Go to the top/root level
 @bind gU = js (function() { location = location.protocol + "//" + document.domain; })()
+#}}}
 
-# --- Zoom binds ---
+# --- Zoom binds ---#{{{
 @cbind  +   = zoom_in
 @cbind  -   = zoom_out
 @cbind  T   = toggle_zoom_type
@@ -251,13 +263,17 @@ set ebind = @mode_bind global,-insert
 @cbind  N   = search_reverse
 #}}}
 
-# --- Uzbl tabbed binds ---#{{{
+#}}}
+
+# --- Tabbing binds ---#{{{
 # Tab opening
-@cbind  tn              = event NEW_TAB
+@cbind  tn              = chain "event NEW_TAB_NEXT" "event NEXT_TAB"
+@cbind  <F2>            = chain "event NEW_TAB_NEXT" "event NEXT_TAB"
 @cbind  tN              = event NEW_TAB_NEXT
-@cbind  to<uri:>_       = event NEW_TAB %s
-@cbind  tO<uri:>_       = event NEW_TAB_NEXT %s
-@cbind  tY              = sh 'echo "event NEW_TAB `parcellite -p | sed s/\\\@/%40/g`" > $4'
+#@cbind  to<uri:>_       = event NEW_TAB %s
+@cbind  to<uri:>_       = chain "event NEW_TAB_NEXT %s" "event NEXT_TAB"
+@cbind  tO<uri:\@uri>_  = chain "event NEW_TAB_NEXT %s" "event NEXT_TAB"
+@cbind  tp              = sh 'echo "event NEW_TAB_NEXT `parcellite -p | sed s/\\\@/%40/g`" > $4'
 # Closing / resting
 @cbind  tC              = exit
 @cbind  tQ              = event CLEAN_TABS
@@ -284,51 +300,51 @@ set preset = event PRESET_TABS
 # --- Web searching binds ---
 # with t at the beginning opens search in new tab
 @cbind  go<Google:>_         = uri http://www.google.com/search?q=\@<encodeURIComponent(%r)>\@
-@cbind  tgo<Google:>_        = chain "event NEW_TAB http://www.google.com/search?q=\@<encodeURIComponent(%r)>\@" "event LAST_TAB"
+@cbind  tgo<Google:>_        = chain "event NEW_TAB_NEXT http://www.google.com/search?q=\@<encodeURIComponent(%r)>\@" "event NEXT_TAB"
 
 @cbind  gi<Google Images:>_  = uri http://images.google.de/images?hl=de&q=\@<encodeURIComponent(%r)>\@&gbv=2
-@cbind  tgi<Google Images:>_  = chain "event NEW_TAB http://images.google.de/images?hl=de&q=\@<encodeURIComponent(%r)>\@&gbv=2" "event LAST_TAB"
+@cbind  tgi<Google Images:>_  = chain "event NEW_TAB_NEXT http://images.google.de/images?hl=de&q=\@<encodeURIComponent(%r)>\@&gbv=2" "event NEXT_TAB"
 
 @cbind  map<Google Maps:>_   = uri http://maps.google.de/maps?q=\@<encodeURIComponent(%r)>\@
 @cbind  maps<Google Maps:>_   = uri http://maps.google.de/maps?q=\@<encodeURIComponent(%r)>\@
-@cbind  tmap<Google Maps:>_   = chain "event NEW_TAB http://maps.google.de/maps?q=\@<encodeURIComponent(%r)>\@" "event LAST_TAB"
-@cbind  tmaps<Google Maps:>_   = chain "event NEW_TAB http://maps.google.de/maps?q=\@<encodeURIComponent(%r)>\@" "event LAST_TAB"
+@cbind  tmap<Google Maps:>_   = chain "event NEW_TAB_NEXT http://maps.google.de/maps?q=\@<encodeURIComponent(%r)>\@" "event NEXT_TAB"
+@cbind  tmaps<Google Maps:>_   = chain "event NEW_TAB_NEXT http://maps.google.de/maps?q=\@<encodeURIComponent(%r)>\@" "event NEXT_TAB"
 
 @cbind  ebay<Ebay:>_         = uri http://search.ebay.de/search/search.dll?from=R40&_trksid=m37&satitle=\@<encodeURIComponent(%r)>\@&category0=
-@cbind  tebay<Ebay:>_         = chain "event NEW_TAB http://search.ebay.de/search/search.dll?from=R40&_trksid=m37&satitle=\@<encodeURIComponent(%r)>\@&category0=" "event LAST_TAB"
+@cbind  tebay<Ebay:>_         = chain "event NEW_TAB_NEXT http://search.ebay.de/search/search.dll?from=R40&_trksid=m37&satitle=\@<encodeURIComponent(%r)>\@&category0=" "event NEXT_TAB"
 
 @cbind  wiki<English Wikipedia:>_  = uri http://en.wikipedia.org/w/index.php?title=Special:Search&search=\@<encodeURIComponent(%r)>\@&go=Go
-@cbind  twiki<English Wikipedia:>_  = chain "event NEW_TAB http://en.wikipedia.org/w/index.php?title=Special:Search&search=\@<encodeURIComponent(%r)>\@&go=Go" "event LAST_TAB"
+@cbind  twiki<English Wikipedia:>_  = chain "event NEW_TAB_NEXT http://en.wikipedia.org/w/index.php?title=Special:Search&search=\@<encodeURIComponent(%r)>\@&go=Go" "event NEXT_TAB"
 
 @cbind  wp<Wikipedia:>_  = uri de.wikipedia.org/wiki/Spezial:Suche?search=\@<encodeURIComponent(%r)>\@&go=Go
-@cbind  twp<Wikipedia:>_  = chain "event NEW_TAB de.wikipedia.org/wiki/Spezial:Suche?search=\@<encodeURIComponent(%r)>\@&go=Go" "event LAST_TAB"
+@cbind  twp<Wikipedia:>_  = chain "event NEW_TAB_NEXT de.wikipedia.org/wiki/Spezial:Suche?search=\@<encodeURIComponent(%r)>\@&go=Go" "event NEXT_TAB"
 
 @cbind  cpan<CPAN:>_    = uri http://search.cpan.org/search?query=\@<encodeURIComponent(%r)>\@&mode=all
-@cbind  tcpan<CPAN:>_    = chain "event NEW_TAB http://search.cpan.org/search?query=\@<encodeURIComponent(%r)>\@&mode=all" "event LAST_TAB"
+@cbind  tcpan<CPAN:>_    = chain "event NEW_TAB_NEXT http://search.cpan.org/search?query=\@<encodeURIComponent(%r)>\@&mode=all" "event NEXT_TAB"
 
-@cbind  tuf<UU Forum:>_ = chain "event NEW_TAB http://ubuntuusers.de/search/?query=\@<encodeURIComponent(%r)>\@&area=forum" "event LAST_TAB"
-@cbind  tuw<UU Wiki:>_ = chain "event NEW_TAB http://ubuntuusers.de/search/?query=\@<encodeURIComponent(%r)>\@&area=wiki" "event LAST_TAB"
+@cbind  tuf<UU Forum:>_ = chain "event NEW_TAB_NEXT http://ubuntuusers.de/search/?query=\@<encodeURIComponent(%r)>\@&area=forum" "event NEXT_TAB"
+@cbind  tuw<UU Wiki:>_ = chain "event NEW_TAB http://ubuntuusers.de/search/?query=\@<encodeURIComponent(%r)>\@&area=wiki" "event NEXT_TAB"
 
-@cbind  tleo<Leo:>_ = chain "event NEW_TAB http://dict.leo.org/ende?lp=ende&lang=de&searchLoc=0&cmpType=relaxed&sectHdr=on&spellToler=on&search=\@<encodeURIComponent(%r)>\@&relink=on" "event LAST_TAB"
+@cbind  tleo<Leo:>_ = chain "event NEW_TAB_NEXT http://dict.leo.org/ende?lp=ende&lang=de&searchLoc=0&cmpType=relaxed&sectHdr=on&spellToler=on&search=\@<encodeURIComponent(%r)>\@&relink=on" "event NEXT_TAB"
 
 @cbind  yt<YouTube:>_ = uri http://de.youtube.com/results?search_query=\@<encodeURIComponent(%r)>\@&search_type=&aq=f&oq=
-@cbind  tyt<YouTube:>_ = chain "event NEW_TAB http://de.youtube.com/results?search_query=\@<encodeURIComponent(%r)>\@&search_type=&aq=f&oq=" "event LAST_TAB"
+@cbind  tyt<YouTube:>_ = chain "event NEW_TAB_NEXT http://de.youtube.com/results?search_query=\@<encodeURIComponent(%r)>\@&search_type=&aq=f&oq=" "event NEXT_TAB"
 
 @cbind  ama<Amazon:>_ = uri http://www.amazon.de/s/ref=nb_ss_w?__mk_de_DE=%C5M%C5Z%D5%D1&url=search-alias%3Daps&field-keywords=\@<encodeURIComponent(%r)>\@
-@cbind  tama<Amazon:>_ = chain "event NEW_TAB http://www.amazon.de/s/ref=nb_ss_w?__mk_de_DE=%C5M%C5Z%D5%D1&url=search-alias%3Daps&field-keywords=\@<encodeURIComponent(%r)>\@" "event LAST_TAB"
+@cbind  tama<Amazon:>_ = chain "event NEW_TAB_NEXT http://www.amazon.de/s/ref=nb_ss_w?__mk_de_DE=%C5M%C5Z%D5%D1&url=search-alias%3Daps&field-keywords=\@<encodeURIComponent(%r)>\@" "event NEXT_TAB"
 
 # --- Hard-bound bookmarks ---
 @cbind  gh  = uri http://www.uzbl.org
 #}}}
 
-# --- Handy binds ---
+# --- Handy binds ---#{{{
 # Set function shortcut
 @cbind  s<var:>_<value:>_  = set %1 = %2
 # Exit binding
 @cbind  ZZ                 = exit
 # Exit binding with undo option
-@cbind  d  = chain 'spawn $XDG_CONFIG_HOME/uzbl/scripts/exit.sh' 'exit'
-@cbind  ut  = chain "spawn $XDG_CONFIG_HOME/uzbl/scripts/undo.sh" "event LAST_TAB"
+@cbind  d  = chain 'spawn \@scripts_dir/exit.sh' 'exit'
+@cbind  ut  = chain "spawn \@scripts_dir/undo.sh" "event NEXT_TAB"
 # Dump config to stdout
 @cbind  !dump              = sh "echo dump_config > $4"
 # Reload all variables in the config
@@ -337,13 +353,9 @@ set preset = event PRESET_TABS
 # Use socat to directly inject commands into uzbl-core and view events
 # raised by uzbl-core:
 @cbind  <Ctrl><Alt>t  = sh 'xterm -e "socat unix-connect:$5 -"'
+#}}}
 
-# --- Uri opening prompts ---
-@cbind  o<uri:>_       = uri %s
-# Or have it load the current uri into the keycmd for editing
-@cbind  O<uri:\@uri>_  = uri %s
-
-# --- Mode setting binds ---
+# --- Mode setting binds ---#{{{
 # Changing mode via  set.
 @cbind  I  = @set_mode insert
 # Or toggle between modes by raising the toggle event.
@@ -351,11 +363,11 @@ set toggle_cmd_ins = @toggle_modes command insert
 @cbind  i          = @toggle_cmd_ins
 # And the global toggle bind.
 @bind   <Ctrl>i    = @toggle_cmd_ins
+#}}}
 
-
-# --- Yanking & pasting binds ---
+# --- Yanking & pasting binds ---#{{{
 @cbind  yu  = sh 'echo -n $6 | parcellite'
-@cbind  yy  = sh 'echo -n $7 | parcellite'
+@cbind  yt  = sh 'echo -n $7 | parcellite'
 
 # Go the page from primary selection
 @cbind  p   = sh 'echo "uri `parcellite -p | sed s/\\\@/%40/g`" > $4'
@@ -365,17 +377,19 @@ set toggle_cmd_ins = @toggle_modes command insert
 @cbind  'p  = sh 'exec uzbl-browser --uri $(parcellite -p)'
 # paste primary selection into keycmd at the cursor position
 @bind <Shift-Insert> = sh 'echo "event INJECT_KEYCMD `parcellite -p | sed s/\\\@/%40/g`" > $4'
+#}}}
 
-# --- Bookmark inserting binds ---
+# --- Bookmark inserting binds ---#{{{
 @cbind <Ctrl>b<tags:>_  = sh 'echo -e "$6 %s" >> $XDG_DATA_HOME/uzbl/bookmarks'
 # Or use a script to insert a bookmark.
 @cbind  BS  = spawn @scripts_dir/insert_bookmark.sh
 
 # --- Bookmark/history loading ---
 @cbind  Lh  = spawn @scripts_dir/load_url_from_history.sh
-@cbind  lB  = spawn @scripts_dir/load_url_from_bookmarks.sh
+@cbind  LB  = spawn @scripts_dir/load_url_from_bookmarks.sh
+#}}}
 
-# --- Link following (similar to vimperator and konqueror) ---
+# --- Link following (similar to vimperator and konqueror) ---#{{{
 # Set custom keys you wish to use for navigation. Some common examples:
 #set follow_hint_keys = 0123456789
 #set follow_hint_keys = qwerty
@@ -383,8 +397,9 @@ set follow_hint_keys = asdfghjkl;
 #set follow_hint_keys = thsnd-rcgmvwb/;789aefijkopquxyz234
 @cbind  f*  = script @scripts_dir/follow.js '@follow_hint_keys %s'
 #@cbind  F*  = script @scripts_dir/follow_newtab.js '@follow_hint_keys %s'
+#}}}
 
-# --- Form filler binds ---
+# --- Form filler binds ---#{{{
 # This script allows you to configure (per domain) values to fill in form
 # fields (eg login information) and to fill in these values automatically.
 # This implementation allows you to save multiple profiles for each form
@@ -394,10 +409,10 @@ set formfiller = spawn @scripts_dir/formfiller.sh
 @cbind  ze  = @formfiller edit
 @cbind  zn  = @formfiller new
 @cbind  zl  = @formfiller load
-
+#}}}
 
 # whitelist cookies
-@cbind AC = spawn $XDG_CONFIG_HOME/uzbl/scripts/cookie2whitelist.py \@uri
+@cbind AC = spawn @scripts_dir/cookie2whitelist.py \@uri
 
 # --- Examples ---
 # Example showing how to use uzbl's fifo to execute a command.
@@ -445,7 +460,6 @@ set stack    = @mode_config stack
 set default_mode = command
 # }}}
 
-
 # === Tab configuration ======================================================# {{{
 
 # General settings
@@ -462,7 +476,6 @@ set new_tab_title           = New
 set max_title_len           = 20
 set show_ellipsis           = 1
 # }}}
-
 
 # === Post-load misc commands  ===============================================# {{{
 

@@ -6,6 +6,6 @@ if [ -e $UNDO ]; then
         sed -i "1d" $UNDO
     fi
 fi
-if [ $6 -ne "" ]; then
+if [ $6 != "" ]; then
     echo "$6" >> $UNDO
 fi
