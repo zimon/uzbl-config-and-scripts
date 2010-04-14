@@ -207,6 +207,7 @@ set ebind = @mode_bind global,-insert
 # a colon.
 @cbind    :_        = %s
 
+# Pagemovements, navigation and zooming#{{{
 # --- Page movement binds ---
 @cbind  j            = scroll vertical 20
 @cbind  k            = scroll vertical -20
@@ -233,18 +234,17 @@ set ebind = @mode_bind global,-insert
 @cbind  T   = toggle_zoom_type
 @cbind  1   = set zoom_level = 1.0
 @cbind  2   = set zoom_level = 2.0
+#}}}
 
-# --- Appearance binds ---
-#@cbind  t   = toggle_status
-
-# --- Page searching binds ---
+# --- Page searching binds ---#{{{
 @cbind  /*  = search %s
 @cbind  ?*  = search_reverse %s
 # Jump to next and previous items
 @cbind  n   = search
 @cbind  N   = search_reverse
+#}}}
 
-# --- Uzbl tabbed binds ---
+# --- Uzbl tabbed binds ---#{{{
 # Tab opening
 @cbind  tn              = event NEW_TAB
 @cbind  tN              = event NEW_TAB_NEXT
@@ -257,23 +257,62 @@ set ebind = @mode_bind global,-insert
 # Tab navigating
 @cbind  g<              = event FIRST_TAB
 @cbind  g>              = event LAST_TAB
-@cbind  gt              = event NEXT_TAB
+#@cbind  gt              = event NEXT_TAB
 @cbind  <Ctrl>n         = event NEXT_TAB
 @cbind  <F8>            = event NEXT_TAB
-@cbind  gT              = event PREV_TAB
+#@cbind  gT              = event PREV_TAB
 @cbind  <F7>            = event PREV_TAB
-@cbind  gi<index:>_     = event GOTO_TAB %s
-# Preset loading
+@cbind  gt<index:>_     = event GOTO_TAB %s
+#}}}
+
+# Preset loading#{{{
 set preset = event PRESET_TABS
 @cbind  gs<preset save:>_   = @preset save %s
 @cbind  glo<preset load:>_  = @preset load %s
 @cbind  gd<preset del:>_    = @preset del %s
 @cbind  gli                 = @preset list
+#}}}
 
+# Bookmarks and search#{{{
 # --- Web searching binds ---
+# with t at the beginning opens search in new tab
 @cbind  go<Google:>_         = uri http://www.google.com/search?q=\@<encodeURIComponent(%r)>\@
-@cbind  \\awiki<Archwiki:>_  = uri http://wiki.archlinux.org/index.php/Special:Search?search=\@<encodeURIComponent(%r)>\@&go=Go
-@cbind  \\wiki<Wikipedia:>_  = uri http://en.wikipedia.org/w/index.php?title=Special:Search&search=\@<encodeURIComponent(%r)>\@&go=Go
+@cbind  tgo<Google:>_        = event NEW_TAB http://www.google.com/search?q=\@<encodeURIComponent(%r)>\@
+
+@cbind  gi<Google Images:>_  = uri http://images.google.de/images?hl=de&q=\@<encodeURIComponent(%r)>\@&gbv=2
+@cbind  tgi<Google Images:>_  = event NEW_TAB http://images.google.de/images?hl=de&q=\@<encodeURIComponent(%r)>\@&gbv=2
+
+@cbind  map<Google Maps:>_   = uri http://maps.google.de/maps?q=\@<encodeURIComponent(%r)>\@
+@cbind  maps<Google Maps:>_   = uri http://maps.google.de/maps?q=\@<encodeURIComponent(%r)>\@
+@cbind  tmap<Google Maps:>_   = event NEW_TAB http://maps.google.de/maps?q=\@<encodeURIComponent(%r)>\@
+@cbind  tmaps<Google Maps:>_   = event NEW_TAB http://maps.google.de/maps?q=\@<encodeURIComponent(%r)>\@
+
+@cbind  ebay<Ebay:>_         = uri http://search.ebay.de/search/search.dll?from=R40&_trksid=m37&satitle=\@<encodeURIComponent(%r)>\@&category0=
+@cbind  tebay<Ebay:>_         = event NEW_TAB http://search.ebay.de/search/search.dll?from=R40&_trksid=m37&satitle=\@<encodeURIComponent(%r)>\@&category0=
+
+@cbind  wiki<English Wikipedia:>_  = uri http://en.wikipedia.org/w/index.php?title=Special:Search&search=\@<encodeURIComponent(%r)>\@&go=Go
+@cbind  twiki<English Wikipedia:>_  = event NEW_TAB http://en.wikipedia.org/w/index.php?title=Special:Search&search=\@<encodeURIComponent(%r)>\@&go=Go
+
+@cbind  wp<Wikipedia:>_  = uri de.wikipedia.org/wiki/Spezial:Suche?search=\@<encodeURIComponent(%r)>\@&go=Go
+@cbind  twp<Wikipedia:>_  = event NEW_TAB de.wikipedia.org/wiki/Spezial:Suche?search=\@<encodeURIComponent(%r)>\@&go=Go
+
+@cbind  cpan<CPAN:>_    = uri http://search.cpan.org/search?query=\@<encodeURIComponent(%r)>\@&mode=all
+@cbind  tcpan<CPAN:>_    = event NEW_TAB http://search.cpan.org/search?query=\@<encodeURIComponent(%r)>\@&mode=all
+
+@cbind  tuf<UU Forum:>_ = event NEW_TAB http://ubuntuusers.de/search/?query=\@<encodeURIComponent(%r)>\@&area=forum
+@cbind  tuw<UU Wiki:>_ = event NEW_TAB http://ubuntuusers.de/search/?query=\@<encodeURIComponent(%r)>\@&area=wiki
+
+@cbind  tleo<Leo:>_ = event NEW_TAB http://dict.leo.org/ende?lp=ende&lang=de&searchLoc=0&cmpType=relaxed&sectHdr=on&spellToler=on&search=\@<encodeURIComponent(%r)>\@&relink=on
+
+@cbind  yt<YouTube:>_ = uri http://de.youtube.com/results?search_query=\@<encodeURIComponent(%r)>\@&search_type=&aq=f&oq=
+@cbind  tyt<YouTube:>_ = event NEW_TAB http://de.youtube.com/results?search_query=\@<encodeURIComponent(%r)>\@&search_type=&aq=f&oq=
+
+@cbind  ama<Amazon:>_ = uri http://www.amazon.de/s/ref=nb_ss_w?__mk_de_DE=%C5M%C5Z%D5%D1&url=search-alias%3Daps&field-keywords=\@<encodeURIComponent(%r)>\@
+@cbind  tama<Amazon:>_ = event NEW_TAB http://www.amazon.de/s/ref=nb_ss_w?__mk_de_DE=%C5M%C5Z%D5%D1&url=search-alias%3Daps&field-keywords=\@<encodeURIComponent(%r)>\@
+
+# --- Hard-bound bookmarks ---
+@cbind  gh  = uri http://www.uzbl.org
+#}}}
 
 # --- Handy binds ---
 # Set function shortcut
@@ -290,7 +329,6 @@ set preset = event PRESET_TABS
 # Use socat to directly inject commands into uzbl-core and view events
 # raised by uzbl-core:
 @cbind  <Ctrl><Alt>t  = sh 'xterm -e "socat unix-connect:$5 -"'
-#@cbind  <Ctrl><Alt>t  = sh 'urxvt -e socat unix-connect:$5 -'
 
 # --- Uri opening prompts ---
 @cbind  o<uri:>_       = uri %s
@@ -306,8 +344,6 @@ set toggle_cmd_ins = @toggle_modes command insert
 # And the global toggle bind.
 @bind   <Ctrl>i    = @toggle_cmd_ins
 
-# --- Hard-bound bookmarks ---
-@cbind  gh  = uri http://www.uzbl.org
 
 # --- Yanking & pasting binds ---
 @cbind  yu  = sh 'echo -n $6 | parcellite'
