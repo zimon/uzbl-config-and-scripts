@@ -6,5 +6,6 @@ if [ -e $UNDO ]; then
         sed -i "1d" $UNDO
     fi
 fi
-echo "test"
-echo "$6" >> $UNDO
+if [ $6 -ne "" ]; then
+    echo "$6" >> $UNDO
+fi

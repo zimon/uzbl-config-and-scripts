@@ -228,8 +228,12 @@ set ebind = @mode_bind global,-insert
 @cbind  S   = stop
 @cbind  r   = reload
 @cbind  R   = reload_ign_cache
-@cbind  >>  = $XDG_CONFIG_HOME/scripts/go_next_page.js
-@cbind  <<  = $XDG_CONFIG_HOME/scripts/go_prev_page.js
+@cbind  >>  = $XDG_CONFIG_HOME/uzbl/scripts/go_next_page.js
+@cbind  <<  = $XDG_CONFIG_HOME/uzbl/scripts/go_prev_page.js
+# Go up one level
+@bind gu = script $XDG_CONFIG_HOME/uzbl/scripts/go_up.js
+# Go to the top/root level
+@bind gU = js (function() { location = location.protocol + "//" + document.domain; })()
 
 # --- Zoom binds ---
 @cbind  +   = zoom_in
@@ -280,38 +284,38 @@ set preset = event PRESET_TABS
 # --- Web searching binds ---
 # with t at the beginning opens search in new tab
 @cbind  go<Google:>_         = uri http://www.google.com/search?q=\@<encodeURIComponent(%r)>\@
-@cbind  tgo<Google:>_        = event NEW_TAB http://www.google.com/search?q=\@<encodeURIComponent(%r)>\@
+@cbind  tgo<Google:>_        = chain "event NEW_TAB http://www.google.com/search?q=\@<encodeURIComponent(%r)>\@" "event LAST_TAB"
 
 @cbind  gi<Google Images:>_  = uri http://images.google.de/images?hl=de&q=\@<encodeURIComponent(%r)>\@&gbv=2
-@cbind  tgi<Google Images:>_  = event NEW_TAB http://images.google.de/images?hl=de&q=\@<encodeURIComponent(%r)>\@&gbv=2
+@cbind  tgi<Google Images:>_  = chain "event NEW_TAB http://images.google.de/images?hl=de&q=\@<encodeURIComponent(%r)>\@&gbv=2" "event LAST_TAB"
 
 @cbind  map<Google Maps:>_   = uri http://maps.google.de/maps?q=\@<encodeURIComponent(%r)>\@
 @cbind  maps<Google Maps:>_   = uri http://maps.google.de/maps?q=\@<encodeURIComponent(%r)>\@
-@cbind  tmap<Google Maps:>_   = event NEW_TAB http://maps.google.de/maps?q=\@<encodeURIComponent(%r)>\@
-@cbind  tmaps<Google Maps:>_   = event NEW_TAB http://maps.google.de/maps?q=\@<encodeURIComponent(%r)>\@
+@cbind  tmap<Google Maps:>_   = chain "event NEW_TAB http://maps.google.de/maps?q=\@<encodeURIComponent(%r)>\@" "event LAST_TAB"
+@cbind  tmaps<Google Maps:>_   = chain "event NEW_TAB http://maps.google.de/maps?q=\@<encodeURIComponent(%r)>\@" "event LAST_TAB"
 
 @cbind  ebay<Ebay:>_         = uri http://search.ebay.de/search/search.dll?from=R40&_trksid=m37&satitle=\@<encodeURIComponent(%r)>\@&category0=
-@cbind  tebay<Ebay:>_         = event NEW_TAB http://search.ebay.de/search/search.dll?from=R40&_trksid=m37&satitle=\@<encodeURIComponent(%r)>\@&category0=
+@cbind  tebay<Ebay:>_         = chain "event NEW_TAB http://search.ebay.de/search/search.dll?from=R40&_trksid=m37&satitle=\@<encodeURIComponent(%r)>\@&category0=" "event LAST_TAB"
 
 @cbind  wiki<English Wikipedia:>_  = uri http://en.wikipedia.org/w/index.php?title=Special:Search&search=\@<encodeURIComponent(%r)>\@&go=Go
-@cbind  twiki<English Wikipedia:>_  = event NEW_TAB http://en.wikipedia.org/w/index.php?title=Special:Search&search=\@<encodeURIComponent(%r)>\@&go=Go
+@cbind  twiki<English Wikipedia:>_  = chain "event NEW_TAB http://en.wikipedia.org/w/index.php?title=Special:Search&search=\@<encodeURIComponent(%r)>\@&go=Go" "event LAST_TAB"
 
 @cbind  wp<Wikipedia:>_  = uri de.wikipedia.org/wiki/Spezial:Suche?search=\@<encodeURIComponent(%r)>\@&go=Go
-@cbind  twp<Wikipedia:>_  = event NEW_TAB de.wikipedia.org/wiki/Spezial:Suche?search=\@<encodeURIComponent(%r)>\@&go=Go
+@cbind  twp<Wikipedia:>_  = chain "event NEW_TAB de.wikipedia.org/wiki/Spezial:Suche?search=\@<encodeURIComponent(%r)>\@&go=Go" "event LAST_TAB"
 
 @cbind  cpan<CPAN:>_    = uri http://search.cpan.org/search?query=\@<encodeURIComponent(%r)>\@&mode=all
-@cbind  tcpan<CPAN:>_    = event NEW_TAB http://search.cpan.org/search?query=\@<encodeURIComponent(%r)>\@&mode=all
+@cbind  tcpan<CPAN:>_    = chain "event NEW_TAB http://search.cpan.org/search?query=\@<encodeURIComponent(%r)>\@&mode=all" "event LAST_TAB"
 
-@cbind  tuf<UU Forum:>_ = event NEW_TAB http://ubuntuusers.de/search/?query=\@<encodeURIComponent(%r)>\@&area=forum
-@cbind  tuw<UU Wiki:>_ = event NEW_TAB http://ubuntuusers.de/search/?query=\@<encodeURIComponent(%r)>\@&area=wiki
+@cbind  tuf<UU Forum:>_ = chain "event NEW_TAB http://ubuntuusers.de/search/?query=\@<encodeURIComponent(%r)>\@&area=forum" "event LAST_TAB"
+@cbind  tuw<UU Wiki:>_ = chain "event NEW_TAB http://ubuntuusers.de/search/?query=\@<encodeURIComponent(%r)>\@&area=wiki" "event LAST_TAB"
 
-@cbind  tleo<Leo:>_ = event NEW_TAB http://dict.leo.org/ende?lp=ende&lang=de&searchLoc=0&cmpType=relaxed&sectHdr=on&spellToler=on&search=\@<encodeURIComponent(%r)>\@&relink=on
+@cbind  tleo<Leo:>_ = chain "event NEW_TAB http://dict.leo.org/ende?lp=ende&lang=de&searchLoc=0&cmpType=relaxed&sectHdr=on&spellToler=on&search=\@<encodeURIComponent(%r)>\@&relink=on" "event LAST_TAB"
 
 @cbind  yt<YouTube:>_ = uri http://de.youtube.com/results?search_query=\@<encodeURIComponent(%r)>\@&search_type=&aq=f&oq=
-@cbind  tyt<YouTube:>_ = event NEW_TAB http://de.youtube.com/results?search_query=\@<encodeURIComponent(%r)>\@&search_type=&aq=f&oq=
+@cbind  tyt<YouTube:>_ = chain "event NEW_TAB http://de.youtube.com/results?search_query=\@<encodeURIComponent(%r)>\@&search_type=&aq=f&oq=" "event LAST_TAB"
 
 @cbind  ama<Amazon:>_ = uri http://www.amazon.de/s/ref=nb_ss_w?__mk_de_DE=%C5M%C5Z%D5%D1&url=search-alias%3Daps&field-keywords=\@<encodeURIComponent(%r)>\@
-@cbind  tama<Amazon:>_ = event NEW_TAB http://www.amazon.de/s/ref=nb_ss_w?__mk_de_DE=%C5M%C5Z%D5%D1&url=search-alias%3Daps&field-keywords=\@<encodeURIComponent(%r)>\@
+@cbind  tama<Amazon:>_ = chain "event NEW_TAB http://www.amazon.de/s/ref=nb_ss_w?__mk_de_DE=%C5M%C5Z%D5%D1&url=search-alias%3Daps&field-keywords=\@<encodeURIComponent(%r)>\@" "event LAST_TAB"
 
 # --- Hard-bound bookmarks ---
 @cbind  gh  = uri http://www.uzbl.org
@@ -323,7 +327,8 @@ set preset = event PRESET_TABS
 # Exit binding
 @cbind  ZZ                 = exit
 # Exit binding with undo option
-@cbind d  = chain 'spawn $XDG_CONFIG_HOME/uzbl/scripts/exit.sh' 'exit'
+@cbind  d  = chain 'spawn $XDG_CONFIG_HOME/uzbl/scripts/exit.sh' 'exit'
+@cbind  ut  = chain "spawn $XDG_CONFIG_HOME/uzbl/scripts/undo.sh" "event LAST_TAB"
 # Dump config to stdout
 @cbind  !dump              = sh "echo dump_config > $4"
 # Reload all variables in the config
@@ -365,11 +370,10 @@ set toggle_cmd_ins = @toggle_modes command insert
 @cbind <Ctrl>b<tags:>_  = sh 'echo -e "$6 %s" >> $XDG_DATA_HOME/uzbl/bookmarks'
 # Or use a script to insert a bookmark.
 @cbind  BS  = spawn @scripts_dir/insert_bookmark.sh
-@cbind  BO  = spawn @scripts_dir/undo.sh
 
 # --- Bookmark/history loading ---
-@cbind  U  = spawn @scripts_dir/load_url_from_history.sh
-@cbind  u  = spawn @scripts_dir/load_url_from_bookmarks.sh
+@cbind  Lh  = spawn @scripts_dir/load_url_from_history.sh
+@cbind  lB  = spawn @scripts_dir/load_url_from_bookmarks.sh
 
 # --- Link following (similar to vimperator and konqueror) ---
 # Set custom keys you wish to use for navigation. Some common examples:
