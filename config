@@ -228,6 +228,8 @@ set ebind = @mode_bind global,-insert
 @cbind  S   = stop
 @cbind  r   = reload
 @cbind  R   = reload_ign_cache
+@cbind  >>  = $XDG_CONFIG_HOME/scripts/go_next_page.js
+@cbind  <<  = $XDG_CONFIG_HOME/scripts/go_prev_page.js
 
 # --- Zoom binds ---
 @cbind  +   = zoom_in
