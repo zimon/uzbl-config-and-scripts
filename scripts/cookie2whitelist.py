@@ -16,7 +16,7 @@ import os
 
 #@cbind AC = spawn @scripts_dir/cookie2whitelist.py \@uri
 
-filename = os.path.expanduser("~/.config/uzbl/cookie_whitelist")
+filename = os.path.expanduser("~/.local/share/uzbl/cookie_whitelist")
 
 def main():
     url = sys.argv[6]

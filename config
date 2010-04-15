@@ -65,6 +65,11 @@ set authentication_handler = sync_spawn @scripts_dir/auth.py
 # Load commit handlers
 @on_event   LOAD_COMMIT    @set_status <span foreground="green">recv</span>
 @on_event   LOAD_COMMIT    spawn @scripts_dir/checkcookie.py
+@on_event   LOAD_COMMIT    spawn @scripts_dir/scriptblock.pl
+@on_event   LOAD_COMMIT    spawn @scripts_dir/adblock.py
+
+# Load progress handlers
+@on_event   LOAD_PROGRESS  js uzblAdBlock();
 
 # Load finish handlers
 @on_event   LOAD_FINISH    @set_status <span foreground="gold">done</span>
@@ -83,6 +88,11 @@ set authentication_handler = sync_spawn @scripts_dir/auth.py
 # }}}
 
 # === Behaviour and appearance ===============================================# {{{
+
+
+# scripts and plugins
+set disable_plugins = 1
+set disable_scripts = 1
 
 set show_status       = 1
 set status_top        = 0
@@ -108,7 +118,7 @@ set selected_section  = <span foreground="#606060">\@[\@SELECTED_URI]\@</span>
 set cookie_color      = #CD2626
 set cookie_status     = <span foreground="\@cookie_color">C</span>
 
-set status_format     = <span font_family="monospace">@mode_section @keycmd_section @progress_section @uri_section @name_section @status_section @scroll_section @selected_section @cookie_status</span>
+set status_format     = <span font_family="monospace">@mode_section @keycmd_section @progress_section @uri_section @name_section @status_section @scroll_section @selected_section @cookie_status \@scripts_status \@plugins_status</span>
 
 set title_format_long = \@keycmd_prompt \@raw_modcmd \@raw_keycmd \@TITLE - Uzbl browser <\@NAME> \@SELECTED_URI
 
@@ -269,6 +279,7 @@ set ebind = @mode_bind global,-insert
 # Tab opening
 @cbind  tn              = chain "event NEW_TAB_NEXT" "event NEXT_TAB"
 @cbind  <F2>            = chain "event NEW_TAB_NEXT" "event NEXT_TAB"
+@cbind  <Ctrl>t         = chain "event NEW_TAB_NEXT" "event NEXT_TAB"
 @cbind  tN              = event NEW_TAB_NEXT
 #@cbind  to<uri:>_       = event NEW_TAB %s
 @cbind  to<uri:>_       = chain "event NEW_TAB_NEXT %s" "event NEXT_TAB"
@@ -339,7 +350,7 @@ set preset = event PRESET_TABS
 
 # --- Handy binds ---#{{{
 # Set function shortcut
-@cbind  s<var:>_<value:>_  = set %1 = %2
+@cbind  set<var:>_<value:>_  = set %1 = %2
 # Exit binding
 @cbind  ZZ                 = exit
 # Exit binding with undo option
@@ -349,6 +360,8 @@ set preset = event PRESET_TABS
 @cbind  !dump              = sh "echo dump_config > $4"
 # Reload all variables in the config
 @cbind  !reload            = sh "sed '/^# === Post-load misc commands/,$d' $1 | grep '^set ' > $4"
+#download url from clipboard
+@cbind  Dp = sh 'echo "event DOWNLOAD_REQUEST `parcellite -p | sed s/\\\@/%40/g`" > $4'
 
 # Use socat to directly inject commands into uzbl-core and view events
 # raised by uzbl-core:
@@ -386,7 +399,7 @@ set toggle_cmd_ins = @toggle_modes command insert
 
 # --- Bookmark/history loading ---
 @cbind  Lh  = spawn @scripts_dir/load_url_from_history.sh
-@cbind  LB  = spawn @scripts_dir/load_url_from_bookmarks.sh
+@cbind  Lb  = spawn @scripts_dir/load_url_from_bookmarks.sh
 #}}}
 
 # --- Link following (similar to vimperator and konqueror) ---#{{{
@@ -399,20 +412,28 @@ set follow_hint_keys = asdfghjkl;
 #@cbind  F*  = script @scripts_dir/follow_newtab.js '@follow_hint_keys %s'
 #}}}
 
+# --- Script and Plugin blocking bindings --- #{{{
+@cbind sus = spawn @scripts_dir/scriptblock.pl unblock_scripts
+@cbind sup = spawn @scripts_dir/scriptblock.pl unblock_plugins
+@cbind sbs = spawn @scripts_dir/scriptblock.pl block_scripts
+@cbind sbp = spawn @scripts_dir/scriptblock.pl block_plugins
+@cbind suc = spawn @scripts_dir/cookie2whitelist.py \@uri
+#@cbind sbc = spawn @scripts_dir/cookie2whitelist.py \@uri # block cookies again - remove from whitelist
+#}}}
+
 # --- Form filler binds ---#{{{
 # This script allows you to configure (per domain) values to fill in form
 # fields (eg login information) and to fill in these values automatically.
 # This implementation allows you to save multiple profiles for each form
 # (think about multiple accounts on some website).
-set formfiller = spawn @scripts_dir/formfiller.sh
+#set formfiller = spawn @scripts_dir/formfiller.sh
+set formfiller = spawn @scripts_dir/eFormFiller.pl
 @cbind  za  = @formfiller add
 @cbind  ze  = @formfiller edit
 @cbind  zn  = @formfiller new
 @cbind  zl  = @formfiller load
 #}}}
 
-# whitelist cookies
-@cbind AC = spawn @scripts_dir/cookie2whitelist.py \@uri
 
 # --- Examples ---
 # Example showing how to use uzbl's fifo to execute a command.

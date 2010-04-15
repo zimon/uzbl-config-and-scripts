@@ -18,15 +18,15 @@ set status_format	 = <span font_family="monospace">[...]@cookie_status</span>
 import sys
 import os
 
-filename = os.path.expanduser("~/.config/uzbl/cookie_whitelist")
+filename = os.path.expanduser("~/.local/share/uzbl/cookie_whitelist")
 
 def main():
 	url = sys.argv[6]
 	fifo = sys.argv[4]
 	if search(url):
-		s = "set cookie_color = #008B00\n" #cookies allowed -> green
+		s = "set cookie_color = #00FF00\n" #cookies allowed -> green
 	else:
-		s = "set cookie_color = #CD2626\n" #cookies not allowed -> red
+		s = "set cookie_color = #FF0000\n" #cookies not allowed -> red
 	f = open(fifo,"w")
 	f.write(s)
 	f.close
