@@ -61,11 +61,9 @@ $domain =~ s/(http|https):\/\/([^\/]+)\/.*/$2/;
 
 
 my $scripts_state=`sed -n "s/$domain \\([01]\\) [01]/\\1/p" $keydir/scriptblock.txt`;
-#print "scripts_state = $scripts_state\n";
 $scripts_state=`sed -n 's/set[[:blank:]]\\+disable_scripts[[:blank:]]\\+=[[:blank:]]\\+\\([01]\\)/\\1/p' $config` if $scripts_state eq "";
 
 my $plugins_state=`sed -n "s/$domain [01] \\([01]\\)/\\1/p" $keydir/scriptblock.txt`;
-#print "plugins_state = $plugins_state\n";
 $plugins_state=`sed -n 's/set[[:blank:]]\\+disable_plugins[[:blank:]]\\+=[[:blank:]]\\+\\([01]\\)/\\1/p' $config` if $plugins_state eq "";
 
 
