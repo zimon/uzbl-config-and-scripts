@@ -110,7 +110,7 @@ set keycmd_section    = [<span \@prompt_style>\@[\@keycmd_prompt]\@</span><span 
 set progress_section  = <span foreground="#606060">\@[\@progress_format]\@</span>
 set scroll_section    = <span foreground="#606060">\@[\@scroll_message]\@</span>
 set uri_section       = <span foreground="#99FF66">\@[\@uri]\@</span>
-set name_section      = <span foreground="khaki">\@[\@NAME]\@</span>
+#set name_section      = <span foreground="khaki">\@[\@NAME]\@</span>
 set status_section    = <span foreground="orange">\@status_message</span>
 set selected_section  = <span foreground="#606060">\@[\@SELECTED_URI]\@</span>
 
@@ -118,7 +118,8 @@ set selected_section  = <span foreground="#606060">\@[\@SELECTED_URI]\@</span>
 set cookie_color      = #CD2626
 set cookie_status     = <span foreground="\@cookie_color">C</span>
 
-set status_format     = <span font_family="monospace">@mode_section @keycmd_section @progress_section @uri_section @name_section @status_section @scroll_section @selected_section @cookie_status \@scripts_status \@plugins_status</span>
+set status_format     = <span font_family="monospace">@mode_section @keycmd_section @progress_section @uri_section @status_section @scroll_section @selected_section @cookie_status \@scripts_status \@plugins_status</span>
+#set status_format     = <span font_family="monospace">@mode_section @keycmd_section @progress_section @uri_section @name_section @status_section @scroll_section @selected_section @cookie_status \@scripts_status \@plugins_status</span>
 
 set title_format_long = \@keycmd_prompt \@raw_modcmd \@raw_keycmd \@TITLE - Uzbl browser <\@NAME> \@SELECTED_URI
 
@@ -213,6 +214,7 @@ set ebind = @mode_bind global,-insert
 #@bind  <Button2>  = sh 'if [ "\@SELECTED_URI" ]; then uzbl-browser -u "\@SELECTED_URI"; else echo "uri $(xclip -o | sed s/\\\@/%40/g)" > $4; fi'
 # Middle click open in new tab
 @bind  <Button2>  = sh 'if [ "\@SELECTED_URI" ]; then echo "event NEW_TAB_NEXT \@SELECTED_URI" > $4; else echo "event NEW_TAB_NEXT $(parcellite -p | sed s/\\\@/%40/g)" > $4; fi'
+@bind  <Ctrl><Button2>  = sh 'if [ "\@SELECTED_URI" ]; then echo "event NEW_TAB_NEXT \@SELECTED_URI" > $4; echo "event NEXT_TAB" > $4; else echo "event NEW_TAB_NEXT $(parcellite -p | sed s/\\\@/%40/g)" > $4; echo "event NEXT_TAB" > $4; fi'
 # }}}
 
 # === Keyboard bindings ======================================================# {{{
@@ -251,6 +253,10 @@ set ebind = @mode_bind global,-insert
 @cbind  R   = reload_ign_cache
 @cbind  >>  = @scripts_dir/go_next_page.js
 @cbind  <<  = @scripts_dir/go_prev_page.js
+# Exit binding with undo option
+@cbind  d  = spawn \@scripts_dir/exit.sh
+@cbind  D  = spawn \@scripts_dir/exit.sh prev
+@cbind  ut  = chain "spawn \@scripts_dir/undo.sh" "event NEXT_TAB"
 # Go up one level
 @bind gu = script @scripts_dir/go_up.js
 # Go to the top/root level
@@ -271,6 +277,8 @@ set ebind = @mode_bind global,-insert
 # Jump to next and previous items
 @cbind  n   = search
 @cbind  N   = search_reverse
+# Clear search
+@cbind  \#  = search_clear
 #}}}
 
 #}}}
@@ -353,9 +361,6 @@ set preset = event PRESET_TABS
 @cbind  set<var:>_<value:>_  = set %1 = %2
 # Exit binding
 @cbind  ZZ                 = exit
-# Exit binding with undo option
-@cbind  d  = chain 'spawn \@scripts_dir/exit.sh' 'exit'
-@cbind  ut  = chain "spawn \@scripts_dir/undo.sh" "event NEXT_TAB"
 # Dump config to stdout
 @cbind  !dump              = sh "echo dump_config > $4"
 # Reload all variables in the config
@@ -434,6 +439,17 @@ set formfiller = spawn @scripts_dir/eFormFiller.pl
 @cbind  zl  = @formfiller load
 #}}}
 
+# --- Session bindings ---#{{{
+set session = spawn @scripts_dir/sessions.pl
+@cbind  so<Session:>_   = @session open %s
+@cbind  sdo             = @session open 
+@cbind  sq              = @session open query_session_file
+@cbind  ss<Session:>_   = @session save %s
+@cbind  sds             = @session save
+@cbind  sc<Session:>_   = @session save_and_quit %s
+@cbind  sdc             = @session save_and_quit
+@cbind  sQ              = @session kill
+#}}}
 
 # --- Examples ---
 # Example showing how to use uzbl's fifo to execute a command.

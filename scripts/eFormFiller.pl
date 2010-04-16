@@ -40,14 +40,12 @@ my $editor='xterm -e vim';
 
 my ($config,$pid,$xid,$fifo,$socket,$url,$title,$action) = @ARGV;
 
-#[ -d $keydir ] || mkdir $keydir || exit 1
+mkdir $keydir unless -d $keydir;
+exit unless -d $keydir;
 
 my $domain = $url;
-$domain =~ s/(http|https):\/\/(.+)\/($|.+\..{2,4}|.*?\?.*)/$2/;
+$domain =~ s/(http|https):\/\/([^\/]+)\/.*\//$2/;
 $domain =~ s/\//_slash_/g;
-#print "file: $keydir/$domain\n";
-
-#print "args: @ARGV\n";
 
 if($action ne 'edit' and  $action ne 'new' and $action ne 'load' and $action ne 'add' and $action ne 'once'){
     $action="new";
@@ -59,21 +57,66 @@ if($action ne 'edit' and  $action ne 'new' and $action ne 'load' and $action ne 
 if($action eq 'load'){
     exit 2 unless -e "$keydir/$domain";
     my $option = "";
-    if(`cat $keydir/$domain|grep "!profile"|wc -l` > 1){
-#        print "mehr als 1 eintrag\n";
-        #my $menu=`cat $keydir/$domain | sed -n 's/^!profile=\\([^[:blank:]]\\+\\)/\\1/p'`;
-        open(MENU,"<$keydir/$domain");
-        my @menulines = <MENU>;
-        close(MENU); 
-        my $menu = join("\n",@menulines);
-        $menu =~ s/.*text.*\n//g;
-        $menu =~ s/.*password.*\n//g;
+    open(MENU,"<$keydir/$domain");
+    my @menulines = <MENU>;
+    close(MENU); 
+    exit unless @menulines;
+    my $menu = join("\n",@menulines);
+    my @num_profiles = ($menu =~ m/(!profile)/g);
+    if($#num_profiles > 0){
         $menu =~ s/\n+/\n/g; # remove empty lines
+        $menu =~ s/(!profile=[^\s]+).*\n!/$1\n!/sg;
+        $menu =~ s/(.*!profile=[^\s]+).*?$/$1/sg;
         $menu =~ s/!profile=([^\s]+)/$1/g;
         $option=`echo "$menu"| dmenu $LINES -nb "$NB" -nf "$NF" -sb "$SB" -sf "$SF" -p "$PROMPT"`;
     }
-
-    `cat $keydir/$domain | sed -n -e "/^!profile=$option/,/^!profile=/p" | sed -n -e 's/\\([^(]\\+\\)([^)]\\+):[ ]*\\([^[:blank:]]\\+\\)/js if(window.frames.length > 0) { for(i=0;i<window.frames.length;i=i+1) { var e = window.frames[i].document.getElementsByName("\\1"); if(e.length > 0) { e[0].value="\\2" } } }; document.getElementsByName("\\1")[0].value="\\2"/p' | sed -e 's/@/\\\\@/g' >> $fifo`;
+    my $entry = join("\n",@menulines);
+    $entry =~ s/.*(!profile=$option.*?)($|!profile.*)/$1/s;
+    $entry =~ s/\n+/\n/g; # remove empty lines
+    $entry =~ s/!profile=$option.*?\n//;
+    my @entries = split(/\n/,$entry);
+    my $js1 = 'js if(window.frames.length > 0) { 
+                for(i=0;i<window.frames.length;i=i+1) { 
+                    var e = window.frames[i].document.getElementsByName("';
+    my $js2 = '");
+                    if(e.length > 0) { 
+                        e[0].value="';
+    my $js3 = '"
+                    } 
+                } 
+            }; document.getElementsByName("';
+    my $js4 = '")[0].value="';
+    my $js = "";
+    foreach my $item (@entries) {
+    my ($name,$type,$value) = ($item =~ m/(.*?)\(([^\)]+)\):\s+(.*)/);
+    if($type ne "checkbox"){
+    $js .= "js if(window.frames.length > 0) { 
+                for(i=0;i<window.frames.length;i=i+1) { 
+                    var e = window.frames[i].document.getElementsByName(\\\"$name\\\");
+                    if(e.length > 0) { 
+                        e[0].value=\\\"$value\\\" 
+                    } 
+                } 
+            }; document.getElementsByName(\\\"$name\\\")[0].value=\\\"$value\\\"__newline__";
+    } else {
+        my $check = "false";
+        $check = "true" if $value eq "checked" || $value eq "selected" || $value eq "checked" || $value eq "true";
+    $js .= "js if(window.frames.length > 0) { 
+                for(i=0;i<window.frames.length;i=i+1) { 
+                    var e = window.frames[i].document.getElementsByName(\\\"$name\\\");
+                    if(e.length > 0) { 
+                        e[0].checked=$check
+                    } 
+                } 
+            }; document.getElementsByName(\\\"$name\\\")[0].checked=$check __newline__";
+    }
+    }
+    
+    $js =~ s/\@/\\\\@/g;
+    $js =~ s/\n//g;
+    $js =~ s/\s+/ /g;
+    $js =~ s/__newline__/\n/g;
+    `echo "$js" >> $fifo`;
 #} elsif($action eq "once"){
 #    my $tmpfile = `mktemp`;
 #    my $html = `echo 'js if(window.frames.length > 0) { for(i=0;i<window.frames.length;i=i+1) { window.frames[i].document.documentElement.outerHTML } }' | socat - unix-connect:$socket`;
@@ -99,7 +142,6 @@ if($action eq 'load'){
 } else {
     if($action eq 'new' or $action eq 'add'){
         my $RANDOM = int(rand(100000));
-#        print "$RANDOM\n";
         if($action eq 'new'){
             `echo "!profile=NAME_THIS_PROFILE$RANDOM" > $keydir/$domain`;
         } else {
@@ -121,12 +163,8 @@ if($action eq 'load'){
     #       login(text):
     #       passwd(password):
     #
-#    print "before html stuff\n";
         my $html=`echo 'js if(window.frames.length > 0) { for(i=0;i<window.frames.length;i=i+1) { window.frames[i].document.documentElement.outerHTML } }' | socat - unix-connect:$socket`;
-        #print "html: $html\n";
-#    print "after first html command\n";
         $html .= " ".`echo 'js document.documentElement.outerHTML' | socat - unix-connect:$socket`;
-#    print "after second html command\n";
     $html =~ s/<!--.*?-->//gs; # remove comments
     $html =~ s/\n//sg; # remove newlines
     $html =~ s/^.*?</</; # remove all but tags
@@ -141,11 +179,9 @@ if($action eq 'load'){
     open(FILE,">>$keydir/$domain");
     print FILE $html;
     close(FILE);
-#    print "after last html command\n";
     }
     exit 3 unless -f "$keydir/$domain"; #this should never happen, but you never know.
 
-#    print "before calling vi: $editor $keydir/$domain\n";
     `$editor $keydir/$domain`; #TODO: if user aborts save in editor, the file is already overwritten
 }
 
