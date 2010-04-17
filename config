@@ -55,7 +55,7 @@ set authentication_handler = sync_spawn @scripts_dir/auth.py
 @on_event   NEW_WINDOW     event NEW_TAB_NEXT %s
 
 # Download handler
-@on_event   DOWNLOAD_REQUEST    spawn @scripts_dir/download.sh %s \@proxy_url
+@on_event   DOWNLOAD_REQUEST    spawn @scripts_dir/download.pl %s
 
 # Load start handler
 @on_event   LOAD_START     @set_status <span foreground="khaki">wait</span>
@@ -67,13 +67,13 @@ set authentication_handler = sync_spawn @scripts_dir/auth.py
 @on_event   LOAD_COMMIT    spawn @scripts_dir/cookies.pl
 @on_event   LOAD_COMMIT    spawn @scripts_dir/scriptblock.pl
 @on_event   LOAD_COMMIT    spawn @scripts_dir/adblock.py
+@on_event   LOAD_COMMIT    spawn @scripts_dir/history.pl 
 
 # Load progress handlers
 @on_event   LOAD_PROGRESS  js uzblAdBlock();
 
 # Load finish handlers
 @on_event   LOAD_FINISH    @set_status <span foreground="gold">done</span>
-@on_event   LOAD_FINISH    spawn @scripts_dir/history.sh
 @on_event   LOAD_FINISH    spawn @scripts_dir/ytvp.sh $4 $6
 #@on_event   LOAD_FINISH    spawn @scripts_dir/favicon.py
 
@@ -114,11 +114,7 @@ set uri_section       = <span foreground="#99FF66">\@[\@uri]\@</span>
 set status_section    = <span foreground="orange">\@status_message</span>
 set selected_section  = <span foreground="#606060">\@[\@SELECTED_URI]\@</span>
 
-# cookie stuff
-set cookie_color      = #FF0000
-set cookie_status     = <span foreground="\@cookie_color">C</span>
-
-set status_format     = <span font_family="monospace">@mode_section @keycmd_section @progress_section @uri_section @status_section @scroll_section @selected_section @cookie_status \@scripts_status \@plugins_status</span>
+set status_format     = <span font_family="monospace">@mode_section @keycmd_section @progress_section @uri_section @status_section @scroll_section @selected_section \@cookie_status \@scripts_status \@plugins_status \@hist_status</span>
 #set status_format     = <span font_family="monospace">@mode_section @keycmd_section @progress_section @uri_section @name_section @status_section @scroll_section @selected_section @cookie_status \@scripts_status \@plugins_status</span>
 
 set title_format_long = \@keycmd_prompt \@raw_modcmd \@raw_keycmd \@TITLE - Uzbl browser <\@NAME> \@SELECTED_URI
@@ -136,6 +132,7 @@ set title_format_long = \@keycmd_prompt \@raw_modcmd \@raw_keycmd \@TITLE - Uzbl
 @progress spinner  = -\\|/
 @progress done     = -
 @progress pending  =
+
 # }}}
 
 # === Core settings ==========================================================# {{{
@@ -425,6 +422,8 @@ set follow_hint_keys = asdfghjkl;
 @cbind suc = spawn @scripts_dir/cookies.pl unblock
 @cbind stc = spawn @scripts_dir/cookies.pl unblock_temp
 @cbind sbc = spawn @scripts_dir/cookies.pl block # block cookies again - remove from whitelist
+@cbind sbh = spawn @scripts_dir/history.pl disable
+@cbind suh = spawn @scripts_dir/history.pl enable
 #}}}
 
 # --- Form filler binds ---#{{{

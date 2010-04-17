@@ -44,7 +44,7 @@ mkdir $keydir unless -d $keydir;
 exit unless -d $keydir;
 
 my $domain = $url;
-$domain =~ s/(http|https):\/\/([^\/]+)\/.*\//$2/;
+$domain =~ s/(http|https):\/\/([^\/]+)\/.*/$2/;
 $domain =~ s/\//_slash_/g;
 
 if($action ne 'edit' and  $action ne 'new' and $action ne 'load' and $action ne 'add' and $action ne 'once'){

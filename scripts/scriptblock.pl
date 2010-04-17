@@ -31,8 +31,8 @@
 # @cbind sbp = spawn @scripts_dir/scriptblock.sh block_plugins
 #
 # This script also sets two variables to be used in the status bar:
-# scripts_status - <span foreground="#ff0000/#00ff00">scripts</span>
-# plugins_status - <span foreground="#ff0000/#00ff00">plugins</span>
+# scripts_status - <span foreground="#FF0000/#00FF00">scripts</span>
+# plugins_status - <span foreground="#FF0000/#00FF00">plugins</span>
 # scripts/plugins text is in red color when disabled, green when enabled
 # To see these variables add \@scripts_status and/or \@plugins_status to the
 # status_format viariable in the config file.
@@ -75,18 +75,18 @@ if($action eq ""){
     `echo "set disable_plugins = $plugins_state" >> $fifo`;
     `echo "set disable_scripts = $scripts_state" >> $fifo`;
     if($scripts_state == 1){
-        `echo "set scripts_status = <span foreground=\\\"#ff0000\\\">S</span>" >> $fifo`;
-#        print "set scripts_status = <span foreground=\\\"#ff0000\\\">S</span> >> $fifo\n";
+        `echo "set scripts_status = <span foreground=\\\"#FF0000\\\">S</span>" >> $fifo`;
+#        print "set scripts_status = <span foreground=\\\"#FF0000\\\">S</span> >> $fifo\n";
     } else {
-        `echo "set scripts_status = <span foreground=\\\"#00ff00\\\">S</span>" >> $fifo`;
-#        print "set scripts_status = <span foreground=\\\"#00ff00\\\">S</span> >> $fifo\n";
+        `echo "set scripts_status = <span foreground=\\\"#00FF00\\\">S</span>" >> $fifo`;
+#        print "set scripts_status = <span foreground=\\\"#00FF00\\\">S</span> >> $fifo\n";
     }
     if($plugins_state == 1){
-        `echo "set plugins_status = <span foreground=\\\"#ff0000\\\">P</span>" >> $fifo`;
-#        print "set plugins_status = <span foreground=\\\"#ff0000\\\">P</span> >> $fifo\n";
+        `echo "set plugins_status = <span foreground=\\\"#FF0000\\\">P</span>" >> $fifo`;
+#        print "set plugins_status = <span foreground=\\\"#FF0000\\\">P</span> >> $fifo\n";
    } else {
-        `echo "set plugins_status = <span foreground=\\\"#00ff00\\\">P</span>" >> $fifo`;
-#        print "set plugins_status = <span foreground=\\\"#00ff00\\\">P</span> >> $fifo\n";
+        `echo "set plugins_status = <span foreground=\\\"#00FF00\\\">P</span>" >> $fifo`;
+#        print "set plugins_status = <span foreground=\\\"#00FF00\\\">P</span> >> $fifo\n";
     }
 } elsif($action eq 'unblock_scripts'){
     if(`grep $domain $keydir/scriptblock.txt`."x" eq "x"){

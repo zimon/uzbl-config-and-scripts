@@ -48,14 +48,14 @@ sub clear_temp {
 }
 
 $action = "" if not defined $action;
-$url =~ s/^(http|https):\/\/([^\/]+?)\/.*/$1:\/\/$2\//;
+$url =~ s/^(http|https):\/\/([^\/]+?)\/.*/$2/;
+print "cookie url: $url\n";
 
 if($action eq ""){
-    my $color_cmd = "set cookie_color = #00FF00\n";
-    $color_cmd = "set cookie_color = #FF0000\n" if checklist() == 0;
-    print "setting color to $color_cmd\n";
+    my $status_cmd = "set cookie_status = <span foreground=\\\"#00FF00\\\">C</span>\n";
+    $status_cmd = "set cookie_status = <span foreground=\\\"#FF0000\\\">C</span>\n" if checklist() == 0;
     open(FIFO,">>$fifo");
-    print FIFO $color_cmd;
+    print FIFO $status_cmd;
     close(FIFO);
 } elsif($action eq "block") {
     print "blocking $url\n";
@@ -65,14 +65,12 @@ if($action eq ""){
         `sed "/$url/d" -i $cookie_whitelist_temp`;
 } elsif($action eq "unblock") {
     if(checklist() == 0){
-    print "unblocking $url\n";
         open(FILE,">>$cookie_whitelist");
         print FILE $url."\n";
         close(FILE);
     }
 } elsif($action eq "unblock_temp") {
     if(checklist() == 0){
-    print "unblocking temporarily $url\n";
         open(FILE,">>$cookie_whitelist");
         print FILE $url."\n";
         close(FILE);
@@ -81,6 +79,5 @@ if($action eq ""){
         close(TEMPFILE);
     }
 } elsif($action eq "clear_temp") {
-    print "clearing temp\n";
     clear_temp();
 }

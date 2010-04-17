@@ -75,11 +75,11 @@ sub save_and_quit {
     my @fifos = `ls $fifo_dir/uzbl_fifo_*`;
     foreach my $actual_fifo (@fifos) {
         chomp $actual_fifo;
-        `echo "spawn $this_script savethis $session_file" > "$actual_fifo"` if $fifo ne "$actual_fifo";
-        `echo "exit" > "$actual_fifo"` if $fifo ne "$actual_fifo";
+        `echo "spawn $this_script save_instance $session_file" >> "$actual_fifo"` if $fifo ne "$actual_fifo";
+        `echo "exit" >> "$actual_fifo"` if $fifo ne "$actual_fifo";
     }
-    `echo "spawn $this_script save_instance $session_file" > "$fifo"`;
-    `echo "exit" > "$fifo"`;
+    `echo "spawn $this_script save_instance $session_file" >> "$fifo"`;
+    `echo "exit" >> "$fifo"`;
 
     cleanup();
 }
@@ -91,9 +91,9 @@ sub save_session {
     my @fifos = `ls $fifo_dir/uzbl_fifo_*`;
     foreach my $actual_fifo (@fifos) {
         chomp $actual_fifo;
-        `echo "spawn $this_script save_instance $session_file" > "$actual_fifo"` if $fifo ne "$actual_fifo";
+        `echo "spawn $this_script save_instance $session_file" >> "$actual_fifo"` if $fifo ne "$actual_fifo";
     }
-    `echo "spawn $this_script save_instance $session_file" > $fifo`;
+    `echo "spawn $this_script save_instance $session_file" >> $fifo`;
 }
 
 # quit all, no save
