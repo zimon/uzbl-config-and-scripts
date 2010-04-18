@@ -2,6 +2,8 @@
 #
 # Enhanced html form (eg for logins) filler (and manager) for uzbl.
 #
+# Most ideas are from Pawel Tomaks eFormFiller.sh script. See http://github.com/grodzik/uzbl-scripts
+#
 # uses settings files like: $keydir/<domain>
 # files contain lines like: !profile=<profile_name>
 #                           <fieldname>(fieldtype): <value>
@@ -18,6 +20,7 @@
 
 use strict;
 use warnings;
+use utf8;
 
 # config dmenu colors and prompt
 my $NB="#0f0f0f";
@@ -57,6 +60,7 @@ sub get_form_fields {
     $html =~ s/<!--.*?-->//gs; # remove comments
     $html =~ s/\n//sg; # remove newlines
     $html =~ s/^.*?</</; # remove all but tags
+    my $html2 = $html;
     $html =~ s/^.*?(<input[^<>]+type[^<>]+>)/$1/; # remove everything until first input tag
     $html =~ s/.*?(<input[^<>]+type[^<>]+>).*?/$1/g; # remove everything but input tag
     $html =~ s/(.*<input[^<>]+type[^<>]+>).*/$1/g; # remove everything after input tags
@@ -64,13 +68,15 @@ sub get_form_fields {
     $html =~ s/<input[^<>]+type="submit"[^<>]+>//g; # remove submit tag
     $html =~ s/>.*?</>\n</g; # each tag in an own line
     $html =~ s/name="([^"]+)"(.*)type="([^"]+)"(.*)/type="$3"$2name="$1"$4/g; # switch name and type if name is first
+    $html =~ s/type="([^"]+)"(.*)value="([^"]*)"(.*)name="([^"]+)"(.*)/type="$1"$2name="$5"$4value="$3"$6/g; # switch name and value if value is first
+    $html =~ s/.*type="([^"]+)".*name="([^"]+)".*value="([^"]*)".*/$2($1): $3/g; # create output when type first
     $html =~ s/.*type="([^"]+)".*name="([^"]+)".*/$2($1): /g; # create output when type first
 
-    open(FILE,">>$filename");
-    print FILE "$html";
-    close(FILE);
+    $html2 =~ s/.*<textarea[^>]*name="([^"]+)".*/$1(textarea): /;
 
-    #`echo "$html2" | sed -n 's/.*<textarea.*name="\\\([^"]\\\+\\\)".*/\\\1(textarea): /Ip' >> $filename`;
+    open(FILE,">>$filename");
+    print FILE "$html\n$html2";
+    close(FILE);
 }
 
 sub fill_form_fields {
@@ -141,6 +147,20 @@ if($action eq 'load'){
     $entry =~ s/!profile=$option.*?\n//;
     my @entries = split(/\n/,$entry);
     fill_form_fields(@entries);
+} elsif($action eq "once"){
+    my $tmpfile=`mktemp`;
+    chomp $tmpfile;
+    get_form_fields($tmpfile);
+
+    `$editor $tmpfile`;
+    exit 2 unless -e $tmpfile;
+
+    open(TMPFILE,"<$tmpfile");
+    my @entries = <TMPFILE>;
+    close(TMPFILE);
+
+    fill_form_fields(@entries);
+    unlink $tmpfile;
 } else {
     if($action eq 'new' or $action eq 'add'){
         my $RANDOM = int(rand(100000));
