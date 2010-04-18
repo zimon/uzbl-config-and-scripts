@@ -1,5 +1,21 @@
 #!/usr/bin/perl
 
+# A history script with enable and disable options
+#
+# This manages a history file. Writing to history can be enabled and disbaled.
+
+# This script sets a variable to be used in the status bar:
+# hist_status - <span foreground="#FF0000/#00FF00">H</span>
+# The H is in red color when disabled, green when enabled
+# To see these variables add \@hist_status to the
+# status_format viariable in the config file.
+#
+# To install, place this script at your scripts_dir and add the following lines to your config file:
+# @on_event   LOAD_COMMIT    spawn @scripts_dir/history.pl 
+
+# @cbind sbh = spawn @scripts_dir/history.pl disable
+# @cbind suh = spawn @scripts_dir/history.pl enable
+
 use strict;
 use warnings;
 

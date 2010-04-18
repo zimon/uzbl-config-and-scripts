@@ -3,20 +3,23 @@
 # Enhanced html form (eg for logins) filler (and manager) for uzbl.
 #
 # Most ideas are from Pawel Tomaks eFormFiller.sh script. See http://github.com/grodzik/uzbl-scripts
-#
+# 
 # uses settings files like: $keydir/<domain>
 # files contain lines like: !profile=<profile_name>
 #                           <fieldname>(fieldtype): <value>
 # profile_name should be replaced with a name that will tell sth about that profile
 # fieldtype can be text or password - only for information pupropse (auto-generated) - don't change that
 #
-# user arg 1:
-# edit: force editing the file (falls back to new if not found)
-# new:  start with a new file.
-# load: try to load from file into form
-# add: try to add another profile to an existing file
+# 
+# To install, place this script in your scripts_dir and add following lines to your config:
 #
-# something else (or empty): if file not available: new, otherwise load.
+# set formfiller = spawn @scripts_dir/eFormFiller.pl
+# @cbind  za  = @formfiller add   # add a new entry to the file of the actual domain
+# @cbind  ze  = @formfiller edit  # edit the file of the actual domain
+# @cbind  zn  = @formfiller new   # create a new file of the actual domain (old ones will be overwritten)
+# @cbind  zl  = @formfiller load  # load entry from the file of the actual domain. If there are multiple entries you can select one over dmenu
+# @cbind  zo  = @formfiller once  # use your favorite editor to write into textareas (like external editor plugins for other browsers)
+#
 
 use strict;
 use warnings;

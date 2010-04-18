@@ -1,17 +1,20 @@
 #!/usr/bin/perl
 #
-# an alternative session script
+# Yet another session saving script
+# 
+# The main ideas for this script come from the example script and the alternative script at http://www.uzbl.org/wiki/uzbl_session.sh
+# 
 #
 # Default session is stored as "default_session_file"
 # 
 # Attention: When session to save as already exists it will be overwritten without prompting the user
 #
-# To install just place this file at your scripts-dir and set up (at least some of) the following bindings:
+# To install just place this file at your scripts_dir and set up (at least some of) the following bindings:
 # 
 #set session = spawn @scripts_dir/sessions.pl
 #@cbind  so<Session:>_   = @session open %s                 # open session with name
 #@cbind  sdo             = @session open                    # open default session
-#@cbind  sq              = @session open query_session_file # open and query for session
+#@cbind  sq              = @session open query_session_file # open and query for session (with dmenu)
 #@cbind  ss<Session:>_   = @session save %s                 # save session as
 #@cbind  sds             = @session save                    # save session as default
 #@cbind  sc<Session:>_   = @session save_and_quit %s        # save session as and quit
@@ -64,12 +67,13 @@ sub cleanup {#{{{
 #}}}
 
 # save instance
-sub save_instance {
+sub save_instance {#{{{
     `echo "$url" >> $sessiondir/$session_file` if $url =~ m/(http|https|file):\/\/.+/;
 }
+#}}}
 
 # quit all, save uris
-sub save_and_quit {
+sub save_and_quit {#{{{
     unlink "$sessiondir/$session_file";
 
     my @fifos = `ls $fifo_dir/uzbl_fifo_*`;
@@ -83,9 +87,10 @@ sub save_and_quit {
 
     cleanup();
 }
+#}}}
 
 # save all, don't quit
-sub save_session {
+sub save_session {#{{{
     unlink "$sessiondir/$session_file";
 
     my @fifos = `ls $fifo_dir/uzbl_fifo_*`;
@@ -95,9 +100,10 @@ sub save_session {
     }
     `echo "spawn $this_script save_instance $session_file" >> $fifo`;
 }
+#}}}
 
 # quit all, no save
-sub kill_session {
+sub kill_session {#{{{
     my @fifos = `ls $fifo_dir/uzbl_fifo_*`;
     foreach my $actual_fifo (@fifos) {
         chomp $actual_fifo;
@@ -105,9 +111,10 @@ sub kill_session {
     }
     cleanup();
 }
+#}}}
 
-# open uzbl
-sub open_session {
+# open uzbl session
+sub open_session {#{{{
     if($session_file eq "query_session_file"){
 # query with dmenu
         my $PROMPT="Choose session file ";
@@ -125,7 +132,7 @@ sub open_session {
     }
     `echo "uri $urls[$#urls]" >> $fifo`;
 }
-
+#}}}
 
 $session_file = $default_session_file if not defined $session_file or $session_file eq "";
 if($action eq "save"){

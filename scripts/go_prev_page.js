@@ -1,3 +1,5 @@
+// This is the script from http://www.uzbl.org/wiki/go-next_prev
+// Only modified regular expressions for previous site links
 (function() {
 	var el = document.querySelector("[rel='prev']");
 	if (el) {

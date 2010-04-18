@@ -1,3 +1,5 @@
+// This is the original script from http://www.uzbl.org/wiki/go-up 
+// No modifications done. This is here just to have everything at one place
 (function() {
 	try { // Go up one level
 		location = location.href.match(/(\w+:\/\/.+?\/)([\w\?\=\+\%\&\-\.]+\/?)$/)[1];

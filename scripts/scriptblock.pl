@@ -1,16 +1,17 @@
 #!/usr/bin/perl
 # Per site script/plugin blocker
 #
-# This is a perl port of the shell-script by Pail Tomak
-# The shell script didn't work for me so I ported it to perl
+# This is a perl port of the shell-script by Paul Tomak.
+#
+# The shell script didn't work for me so I ported it to perl.
 # Error message was:
 # scriptblock.sh: 91: Syntax error: "elif" unexpected (expecting "then")
 #
-# I added some small enhancements
+# Now you can use it either with whitelists or blacklists (see variable "$whitelist" below. Scripts and plugins can be temporarily (un)blocked.
 #
-# To use this script add:
-# @on_event LOAD_COMMIT spawn @scripts_dir/scriptblock.sh
-# in your config file.
+# To remove the temporarily white-/blacklisted domains from the white-/blacklist this script should be called with argument clear_temp. 
+# As the INSTANCE_EXIT event doesn't work for me I use the uzbl script to start uzbl-tabbed (or uzbl-browser) which calls this script when uzbl was closed.
+#
 # When called without any parameter script will set per-domain setting or
 # default ones, if there aren't any for current domain
 #
@@ -24,18 +25,25 @@
 # unblock_plugins/unblock_scripts - to unblock plugins/scripts for current
 # domain
 # block_plugins/block_scripts - to block plugins/scripts for current domain
-# For example:
+#
+# This script also sets two variables to be used in the status bar:
+# scripts_status - <span foreground="#FF0000/#00FF00">S</span>
+# plugins_status - <span foreground="#FF0000/#00FF00">P</span>
+# S/P text is in red color when disabled, green when enabled
+# To see these variables add \@scripts_status and/or \@plugins_status to the
+# status_format viariable in the config file.
+#
+# To install, place this script at your scripts_dir and add the following lines to your config file
+# @on_event LOAD_COMMIT spawn @scripts_dir/scriptblock.sh
 # @cbind sus = spawn @scripts_dir/scriptblock.sh unblock_scripts
 # @cbind sup = spawn @scripts_dir/scriptblock.sh unblock_plugins
+# @cbind stp = spawn @scripts_dir/scriptblock.sh unblock_scripts_temp # temporary unblock scripts. Use for whitelists
+# @cbind sts = spawn @scripts_dir/scriptblock.sh unblock_plugins_temp # temporary block plugins. Use for whitelists
 # @cbind sbs = spawn @scripts_dir/scriptblock.sh block_scripts
 # @cbind sbp = spawn @scripts_dir/scriptblock.sh block_plugins
 #
-# This script also sets two variables to be used in the status bar:
-# scripts_status - <span foreground="#FF0000/#00FF00">scripts</span>
-# plugins_status - <span foreground="#FF0000/#00FF00">plugins</span>
-# scripts/plugins text is in red color when disabled, green when enabled
-# To see these variables add \@scripts_status and/or \@plugins_status to the
-# status_format viariable in the config file.
+# For blacklists call the script with block_scripts_temp and block_plugins_temp.
+#
 #
 # Writen by Paul Tomak <paul.tomak@gmail.com>
 #
@@ -44,7 +52,6 @@ use strict;
 use warnings;
 
 # Set this variable to 1 to use the files as whitelists (then set disable_scripts and disable_plugins to 1 in config file. Set $whitelist to 0 to use the files as blacklists (then set disable_scripts and disable_plugins to 0 in the config file).
-
 my $whitelist = 1;
 
 my $keydir=$ENV{HOME}."/.local/share/uzbl";

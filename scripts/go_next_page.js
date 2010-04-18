@@ -1,3 +1,5 @@
+// This is the script from http://www.uzbl.org/wiki/go-next_prev
+// Only modified regular expressions for next site links
 (function() {
 	var el = document.querySelector("[rel='next']");
 	if (el) { // Wow a developer that knows what he's doing!
@@ -7,7 +9,7 @@
 		var els = document.getElementsByTagName("a");
 		var i = els.length;
 		while ((el = els[--i])) {
-			if (el.text.search(/\bnext\b|\bmore[\.…]*$|[>»]$|\bnächste\b|\bweiter\b/i) > -1) {
+			if (el.text.search(/\bnext\b|\bnext>\b|\bmore[\.…]*$|[>»]$|\bnächste\b|\bweiter\b/i) > -1) {
 				location = el.href;
 				break;
 			}

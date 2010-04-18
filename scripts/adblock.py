@@ -3,6 +3,9 @@ import os
 from sys import argv
 from urlparse import urlparse
 
+# This is the original adblock.py script from http://www.uzbl.org/wiki/adblock
+# Nothing was modified. This script is here just to have everything at one place.
+
 def xdghome(key, default):
     '''Attempts to use the environ XDG_*_HOME paths if they exist otherwise
     use $HOME and the default path.'''
