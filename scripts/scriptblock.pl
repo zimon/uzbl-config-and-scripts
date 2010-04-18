@@ -97,7 +97,7 @@ sub checklist {
 sub add_to_list {
     my $listkey = shift;
     my $temp = shift;
-    return unless $domain =~ /(http|https|ftp)/;
+    return unless $domain =~ m/.+\..+/;
     if(checklist($domain,$listkey) == 0){
         my $list = $scriptlist;
         my $list_temp = $scriptlist_temp;
