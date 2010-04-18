@@ -68,6 +68,7 @@ set authentication_handler = sync_spawn @scripts_dir/auth.py
 @on_event   LOAD_COMMIT    spawn @scripts_dir/scriptblock.pl
 @on_event   LOAD_COMMIT    spawn @scripts_dir/adblock.py
 @on_event   LOAD_COMMIT    spawn @scripts_dir/history.pl 
+#@on_event   LOAD_COMMIT    script @scripts_dir/scroll_msg.js
 
 # Load progress handlers
 @on_event   LOAD_PROGRESS  js uzblAdBlock();
@@ -81,6 +82,7 @@ set authentication_handler = sync_spawn @scripts_dir/auth.py
 @on_event   FORM_ACTIVE    @set_mode insert
 # Switch to command mode if anything else is clicked
 @on_event   ROOT_ACTIVE    @set_mode command
+
 
 # Example CONFIG_CHANGED event handler
 #@on_event  CONFIG_CHANGED print Config changed: %1 = %2
@@ -215,6 +217,9 @@ set ebind = @mode_bind global,-insert
 # }}}
 
 # === Keyboard bindings ======================================================# {{{
+#
+# new window:
+@cbind tw = "event NEW_WINDOW";
 
 # With this command you can enter in any command at runtime when prefixed with
 # a colon.
@@ -248,8 +253,8 @@ set ebind = @mode_bind global,-insert
 @cbind  S   = stop
 @cbind  r   = reload
 @cbind  R   = reload_ign_cache
-@cbind  >>  = @scripts_dir/go_next_page.js
-@cbind  <<  = @scripts_dir/go_prev_page.js
+@cbind  >>  = script @scripts_dir/go_next_page.js
+@cbind  <<  = script @scripts_dir/go_prev_page.js
 # Exit binding with undo option
 @cbind  d  = spawn \@scripts_dir/exit.sh
 @cbind  D  = spawn \@scripts_dir/exit.sh prev
@@ -419,6 +424,8 @@ set follow_hint_keys = asdfghjkl;
 @cbind sup = spawn @scripts_dir/scriptblock.pl unblock_plugins
 @cbind sbs = spawn @scripts_dir/scriptblock.pl block_scripts
 @cbind sbp = spawn @scripts_dir/scriptblock.pl block_plugins
+@cbind sts = spawn @scripts_dir/scriptblock.pl unblock_scripts_temp
+@cbind stp = spawn @scripts_dir/scriptblock.pl unblock_plugins_temp
 @cbind suc = spawn @scripts_dir/cookies.pl unblock
 @cbind stc = spawn @scripts_dir/cookies.pl unblock_temp
 @cbind sbc = spawn @scripts_dir/cookies.pl block # block cookies again - remove from whitelist
@@ -431,12 +438,12 @@ set follow_hint_keys = asdfghjkl;
 # fields (eg login information) and to fill in these values automatically.
 # This implementation allows you to save multiple profiles for each form
 # (think about multiple accounts on some website).
-#set formfiller = spawn @scripts_dir/formfiller.sh
 set formfiller = spawn @scripts_dir/eFormFiller.pl
 @cbind  za  = @formfiller add
 @cbind  ze  = @formfiller edit
 @cbind  zn  = @formfiller new
 @cbind  zl  = @formfiller load
+@cbind  zo  = @formfiller once
 #}}}
 
 # --- Session bindings ---#{{{

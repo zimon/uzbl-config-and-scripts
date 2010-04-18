@@ -43,11 +43,13 @@
 use strict;
 use warnings;
 
+# Set this variable to 1 to use the files as whitelists (then set disable_scripts and disable_plugins to 1 in config file. Set $whitelist to 0 to use the files as blacklists (then set disable_scripts and disable_plugins to 0 in the config file).
+
+my $whitelist = 1;
+
 my $keydir=$ENV{HOME}."/.local/share/uzbl";
 
-#exit if -d `dirname $keydir`;
-#[ -d $keydir ] || mkdir $keydir || exit 1
-mkdir $keydir unless -d $keydir;
+exit unless -d $keydir;
 
 my ($config,$pid,$xid,$fifo,$socket,$url,$title,$action) = @ARGV;
 
@@ -56,72 +58,171 @@ $action = "" unless defined $action;
 my $domain = $url;
 $domain =~ s/(http|https):\/\/([^\/]+)\/.*/$2/;
 
-#print "keydir = $keydir, domain = $domain, action = $action\n";
+
+my $scriptlist = "$keydir/scriptblock.txt";
+my $pluginlist = "$keydir/pluginblock.txt";
+my $scriptlist_temp = "$keydir/scriptblock_temp.txt";
+my $pluginlist_temp = "$keydir/pluginblock_temp.txt";
+
+`touch $scriptlist` if not -f $scriptlist;
+`touch $scriptlist_temp` if not -f $scriptlist_temp;
+
+`touch $pluginlist` if not -f $pluginlist;
+`touch $pluginlist_temp` if not -f $pluginlist_temp;
 
 
+sub to_fifo {
+    my $cmd = shift;
+    open(FIFO,">>$fifo");
+    print FIFO $cmd;
+    close(FIFO);
+}
 
-my $scripts_state=`sed -n "s/$domain \\([01]\\) [01]/\\1/p" $keydir/scriptblock.txt`;
-$scripts_state=`sed -n 's/set[[:blank:]]\\+disable_scripts[[:blank:]]\\+=[[:blank:]]\\+\\([01]\\)/\\1/p' $config` if $scripts_state eq "";
+sub checklist {
+    my $check_domain = shift;
+    my $listkey = shift;
+    my $list = $scriptlist;
+    $list = $pluginlist if $listkey eq "plugin";
+    return 1 if(`grep "$check_domain" $list | wc -l` > 0 );
+    return 0;
+}
 
-my $plugins_state=`sed -n "s/$domain [01] \\([01]\\)/\\1/p" $keydir/scriptblock.txt`;
-$plugins_state=`sed -n 's/set[[:blank:]]\\+disable_plugins[[:blank:]]\\+=[[:blank:]]\\+\\([01]\\)/\\1/p' $config` if $plugins_state eq "";
+sub add_to_list {
+    my $listkey = shift;
+    my $temp = shift;
+    return unless $domain =~ /(http|https|ftp)/;
+    if(checklist($domain,$listkey) == 0){
+        my $list = $scriptlist;
+        my $list_temp = $scriptlist_temp;
+        if($listkey eq "plugin"){
+            $list = $pluginlist;
+            $list_temp = $pluginlist_temp;
+        }
 
+        open(FILE,">>$list");
+        print FILE $domain."\n";
+        close(FILE);
 
+        if(defined $temp and $temp eq "temp"){
+            open(FILE,">>$list_temp");
+            print FILE $domain."\n";
+            close(FILE);
+        }
+    }
+}
 
-#print "scripts_state = $scripts_state\n";
-#print "plugins_state = $plugins_state\n";
+sub remove_from_list {
+    my $listkey = shift;
+    my $list = $scriptlist;
+    my $list_temp = $scriptlist_temp;
+    if($listkey eq "plugin"){
+        $list = $pluginlist;
+        $list_temp = $pluginlist_temp;
+    }
+    $domain =~ s/\./\\./g;
+    $domain =~ s/\//\\\//g;
+    `sed "/$domain/d" -i $list`;
+    `sed "/$domain/d" -i $list_temp`;
+}
+
+sub clear_temp {
+    my @processes = `ps -e | grep uzbl-core`;
+    if($#processes == -1){
+        open(TEMPSCRIPTS,"<$scriptlist_temp");
+        my @tempurls = <TEMPSCRIPTS>;
+        close(TEMPSCRIPTS);
+        foreach my $tempurl (@tempurls) {
+            chomp $tempurl;
+            $tempurl =~ s/\./\\./g;
+            $tempurl =~ s/\//\\\//g;
+            `sed "/$tempurl/d" -i $scriptlist` if checklist($tempurl,"script") == 1;
+        }
+        `> $scriptlist_temp`;
+
+        open(TEMPPLUGINS,"<$pluginlist_temp");
+        @tempurls = <TEMPPLUGINS>;
+        close(TEMPPLUGINS);
+        foreach my $tempurl (@tempurls) {
+            chomp $tempurl;
+            $tempurl =~ s/\./\\./g;
+            $tempurl =~ s/\//\\\//g;
+            `sed "/$tempurl/d" -i $pluginlist` if checklist($tempurl,"script") == 1;
+        }
+        `> $pluginlist_temp`;
+    }
+}
 
 if($action eq ""){
-    `echo "set disable_plugins = $plugins_state" >> $fifo`;
-    `echo "set disable_scripts = $scripts_state" >> $fifo`;
-    if($scripts_state == 1){
-        `echo "set scripts_status = <span foreground=\\\"#FF0000\\\">S</span>" >> $fifo`;
-#        print "set scripts_status = <span foreground=\\\"#FF0000\\\">S</span> >> $fifo\n";
+    if(checklist($domain,"script") xor $whitelist == 1){
+        to_fifo("set disable_scripts = 1\n");
+        to_fifo("set scripts_status = <span foreground=\\\"#FF0000\\\">S</span>\n");
     } else {
-        `echo "set scripts_status = <span foreground=\\\"#00FF00\\\">S</span>" >> $fifo`;
-#        print "set scripts_status = <span foreground=\\\"#00FF00\\\">S</span> >> $fifo\n";
+        to_fifo("set disable_scripts = 0\n");
+        to_fifo("set scripts_status = <span foreground=\\\"#00FF00\\\">S</span>\n");
     }
-    if($plugins_state == 1){
-        `echo "set plugins_status = <span foreground=\\\"#FF0000\\\">P</span>" >> $fifo`;
-#        print "set plugins_status = <span foreground=\\\"#FF0000\\\">P</span> >> $fifo\n";
-   } else {
-        `echo "set plugins_status = <span foreground=\\\"#00FF00\\\">P</span>" >> $fifo`;
-#        print "set plugins_status = <span foreground=\\\"#00FF00\\\">P</span> >> $fifo\n";
+    if(checklist($domain,"plugin") xor $whitelist == 1){
+        to_fifo("set disable_plugins = 1\n");
+        to_fifo("set plugins_status = <span foreground=\\\"#FF0000\\\">P</span>\n");
+    } else {
+        to_fifo("set disable_plugins = 0\n");
+        to_fifo("set plugins_status = <span foreground=\\\"#00FF00\\\">P</span>\n");
     }
 } elsif($action eq 'unblock_scripts'){
-    if(`grep $domain $keydir/scriptblock.txt`."x" eq "x"){
-        chomp $plugins_state;
-        `echo $domain 0 $plugins_state >> $keydir/scriptblock.txt`;
-#        print "$domain 0 $plugins_state >> $keydir/scriptblock.txt\n";
+    to_fifo("set disable_scripts = 0\n");
+    if($whitelist == 1){
+        add_to_list("script");
     } else {
-        `sed "s/\\($domain\\) [01] \\([01]\\)/\\1 0 \\2/" -i $keydir/scriptblock.txt`;
-        #print "sed \"s/\($domain\) [01] \([01]\)/\1 0 \2/\" -i $keydir/scriptblock.txt\n";
+        remove_from_list("script");
+    }
+} elsif($action eq 'unblock_scripts_temp'){
+    to_fifo("set disable_scripts = 0\n");
+    if($whitelist == 1){
+        add_to_list("script","temp");
+    } else {
+        print "it doesn't make much sense to unblock scripts temporarily when using blacklists\n";
     }
 } elsif($action eq 'unblock_plugins'){
-    if(`grep $domain  $keydir/scriptblock.txt`."x" eq "x"){
-        chomp $scripts_state;
-        `echo $domain $scripts_state 0 >> $keydir/scriptblock.txt`;
-        #print " $domain 0 0 >> $keydir/scriptblock.txt\n";
+    to_fifo("set disable_plugins = 0\n");
+    if($whitelist == 1){
+        add_to_list("plugin");
     } else {
-        `sed "s/\\($domain\\) \\([01]\\) [01]/\\1 \\2 0/" -i $keydir/scriptblock.txt`;
-        #print "sed \"s/\\($domain\\) \\([01]\\) [01]/\\1 \\2 0/\" -i $keydir/scriptblock.txt\n";
+        remove_from_list("plugin");
+    }
+} elsif($action eq 'unblock_plugins_temp'){
+    to_fifo("set disable_plugins = 0\n");
+    if($whitelist == 1){
+        add_to_list("plugin","temp");
+    } else {
+        print "it doesn't make much sense to unblock plugins temporarily when using blacklists\n";
     }
 } elsif($action eq 'block_scripts'){
-    if(`grep $domain  $keydir/scriptblock.txt`."x" eq "x"){
-        chomp $plugins_state;
-        `echo $domain 1 $plugins_state >> $keydir/scriptblock.txt`;
-#        print " $domain 1 $plugins_state >> $keydir/scriptblock.txt\n";
+    to_fifo("set disable_scripts = 1\n");
+    if($whitelist == 1){
+        remove_from_list("script");
     } else {
-        `sed "s/\\($domain\\) [01] \\([01]\\)/\\1 1 \\2/" -i $keydir/scriptblock.txt`;
-        #print "sed \"s/\\($domain\\) [01] \\([01]\\)/\\1 1 \\2/\" -i $keydir/scriptblock.txt\n";
+        add_to_list("script");
+    }
+} elsif($action eq 'block_scripts_temp'){
+    to_fifo("set disable_scripts = 1\n");
+    if($whitelist == 1){
+        print "it doesn't make much sense to block scripts temporarily when using whitelists\n";
+    } else {
+        add_to_list("script","temp");
     }
 } elsif($action eq 'block_plugins'){
-    if(`grep $domain  $keydir/scriptblock.txt`."x" eq "x"){
-        chomp $scripts_state;
-        `echo $domain $scripts_state 1 >> $keydir/scriptblock.txt`;
-#        print " $domain $scripts_state 1 >> $keydir/scriptblock.txt\n";
+    to_fifo("set disable_plugins = 1\n");
+    if($whitelist == 1){
+        remove_from_list("plugin");
     } else {
-        `sed "s/\\($domain\\) \\([01]\\) [01]/\\1 \\2 1/" -i $keydir/scriptblock.txt`;
-        print "sed \"s/\($domain\) \([01]\) [01]/\1 \2 1/\" -i $keydir/scriptblock.txt\n";
+        add_to_list("plugin");
     }
+} elsif($action eq 'block_plugins_temp'){
+    to_fifo("set disable_plugins = 1\n");
+    if($whitelist == 1){
+        add_to_list("plugin","temp");
+    } else {
+        print "it doesn't make much sense to block plugins temporarily when using whitelists\n";
+    }
+} elsif($action eq 'clear_temp'){
+    clear_temp();
 }

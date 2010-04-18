@@ -1,0 +1,9 @@
+#!/bin/bash
+
+#UZBLCOMMAND=/usr/local/bin/uzbl-browser
+UZBLCOMMAND=/usr/local/bin/uzbl-tabbed
+
+$UZBLCOMMAND
+
+${HOME}/.config/uzbl/scripts/scriptblock.pl 0 0 0 0 0 0 0 clear_temp
+${HOME}/.config/uzbl/scripts/cookies.pl 0 0 0 0 0 0 0 clear_temp
