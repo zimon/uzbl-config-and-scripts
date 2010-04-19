@@ -17,7 +17,9 @@
 # @cbind  za  = @formfiller add   # add a new entry to the file of the actual domain
 # @cbind  ze  = @formfiller edit  # edit the file of the actual domain
 # @cbind  zn  = @formfiller new   # create a new file of the actual domain (old ones will be overwritten)
-# @cbind  zl  = @formfiller load  # load entry from the file of the actual domain. If there are multiple entries you can select one over dmenu
+# @cbind  zl  = chain "@formfiller load" "@set_mode insert"  # load entry from the file of the actual domain. 
+# If there are multiple entries you can select one over dmenu. Then switch to insert mode so that you can login by pressing enter.
+#
 # @cbind  zo  = @formfiller once  # use your favorite editor to write into textareas (like external editor plugins for other browsers)
 #
 
@@ -69,6 +71,7 @@ sub get_form_fields {
     $html =~ s/(.*<input[^<>]+type[^<>]+>).*/$1/g; # remove everything after input tags
     $html =~ s/<input[^<>]+type="hidden"[^<>]+>//g; # remove hidden tags
     $html =~ s/<input[^<>]+type="submit"[^<>]+>//g; # remove submit tag
+    $html =~ s/<input[^<>]+type="button"[^<>]+>//g; # remove button tags
     $html =~ s/>.*?</>\n</g; # each tag in an own line
     $html =~ s/name="([^"]+)"(.*)type="([^"]+)"(.*)/type="$3"$2name="$1"$4/g; # switch name and type if name is first
     $html =~ s/type="([^"]+)"(.*)value="([^"]*)"(.*)name="([^"]+)"(.*)/type="$1"$2name="$5"$4value="$3"$6/g; # switch name and value if value is first
@@ -111,7 +114,7 @@ sub fill_form_fields {
         }
     }
 
-    $js =~ s/\@/\\\\@/g;
+    $js =~ s/\@/\\\@/g;
     $js =~ s/\n//g;
     $js =~ s/\s+/ /g;
     $js =~ s/__newline__/\n/g;
