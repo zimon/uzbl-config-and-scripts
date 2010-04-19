@@ -96,6 +96,8 @@ set authentication_handler = sync_spawn @scripts_dir/auth.py
 set disable_plugins = 1
 set disable_scripts = 1
 
+set autoshrink_images = 1
+
 set show_status       = 1
 set status_top        = 0
 set status_background = #303030
@@ -230,7 +232,9 @@ set ebind = @mode_bind global,-insert
 @cbind  h            = scroll horizontal -20
 @cbind  l            = scroll horizontal 20
 @cbind  <Page_Up>    = scroll vertical -100%
+@cbind  <Ctrl>u      = scroll vertical -100%
 @cbind  <Page_Down>  = scroll vertical 100%
+@cbind  <Ctrl>d      = scroll vertical 100%
 @cbind  gg           = scroll vertical begin
 @cbind  G            = scroll vertical end
 @cbind  ^            = scroll horizontal begin
@@ -246,7 +250,7 @@ set ebind = @mode_bind global,-insert
 @cbind  O<uri:\@uri>_  = uri %s
 
 @cbind  b   = back
-@cbind  m   = forward
+@cbind  <Ctrl>m   = forward
 @cbind  S   = stop
 @cbind  r   = reload
 @cbind  R   = reload_ign_cache
@@ -367,6 +371,8 @@ set preset = event PRESET_TABS
 #download url from clipboard
 @cbind  Dp = sh 'echo "event DOWNLOAD_REQUEST `parcellite -p | sed s/\\\@/%40/g`" > $4'
 
+@cbind <Ctrl>q = sh 'if [ $8 = 1 ]; then echo "set view_source = 0" >> $4; echo "to 0"; else echo "set view_source = 1" >> $4; echo "to 1"; fi; echo "set uri = $6" >> $4;' \@view_source
+
 # Use socat to directly inject commands into uzbl-core and view events
 # raised by uzbl-core:
 @cbind  <Ctrl><Alt>t  = sh 'xterm -e "socat unix-connect:$5 -"'
@@ -391,15 +397,15 @@ set toggle_cmd_ins = @toggle_modes command insert
 # Go to the page in clipboard
 @cbind  P   = sh 'echo "uri `parcellite -c | sed s/\\\@/%40/g`" > $4'
 # Start a new uzbl instance from the page in primary selection
-@cbind  'p  = sh 'exec uzbl-browser --uri $(parcellite -p)'
+#@cbind  'p  = sh 'exec uzbl-browser --uri $(parcellite -p)'
 # paste primary selection into keycmd at the cursor position
 @bind <Shift-Insert> = sh 'echo "event INJECT_KEYCMD `parcellite -p | sed s/\\\@/%40/g`" > $4'
 #}}}
 
 # --- Bookmark inserting binds ---#{{{
-@cbind <Ctrl>b<tags:>_  = sh 'echo -e "$6 %s" >> $XDG_DATA_HOME/uzbl/bookmarks'
+@cbind <Ctrl>b<tags:>_  = sh 'echo -e "$6 $7\t%s" >> $HOME/.local/share/uzbl/bookmarks'
 # Or use a script to insert a bookmark.
-@cbind  BS  = spawn @scripts_dir/insert_bookmark.sh
+@cbind  <Ctrl>B  = spawn @scripts_dir/insert_bookmark.sh
 
 # --- Bookmark/history loading ---
 @cbind  Lh  = spawn @scripts_dir/load_url_from_history.sh
