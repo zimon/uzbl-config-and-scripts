@@ -520,7 +520,7 @@ set show_ellipsis           = 1
 
 # === Post-load misc commands  ===============================================# {{{
 
-# Set the "home" page.
+# Set the "home" page. Doesn't work atm
 set uri = http://zinformatik.de
 # }}}
 

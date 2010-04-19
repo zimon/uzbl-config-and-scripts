@@ -9,7 +9,9 @@
 # To remove the temporarily whitelisted domains from the whitelist this script should be called with argument clear_temp. 
 # As the INSTANCE_EXIT event doesn't work for me I use the uzbl script to start uzbl-tabbed (or uzbl-browser) which calls this script when uzbl was closed
 # 
-# To install, place this script in your scripts_dir and add the following lines to your config
+# To install, place this script in your scripts_dir and change the 'use_whitelist' variable to true in uzbl-cookie-daemon.
+# Then add the following lines to your config:
+#
 # set cookie_color	  = #FF0000
 # set cookie_status	 = <span foreground="\@cookie_color">C</span>
 # set status_format	 = <span font_family="monospace">[...]@cookie_status</span>
