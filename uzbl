@@ -1,9 +1,18 @@
 #!/bin/bash
 
+# This script loads the uzbl-tabbed (or uzbl-browser) and does some cleanup when it is closed (look at the scripts called to get more informations)
+# It is a workaround because the INSTANCE_EXIT event doesn't work for me.
+
+# Set your uzbl executable here
 #UZBLCOMMAND=/usr/local/bin/uzbl-browser
 UZBLCOMMAND=/usr/local/bin/uzbl-tabbed
 
+
+# call uzbl
 $UZBLCOMMAND
 
+# clear temporary script and plugin white-/blacklistings
 ${HOME}/.config/uzbl/scripts/scriptblock.pl 0 0 0 0 0 0 0 clear_temp
+
+# clear temporary cookie whitelistings
 ${HOME}/.config/uzbl/scripts/cookies.pl 0 0 0 0 0 0 0 clear_temp
